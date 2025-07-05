@@ -965,3 +965,302 @@ auto hello_lambda = []{
 };
 hello_lambda();
 
+## Дополнительные концепции лямбда-функций
+
+### Мутабельные лямбды
+
+По умолчанию лямбда-функции являются константными, что означает, что они не могут изменять захваченные по значению переменные. Если нужно изменить захваченную переменную, используйте ключевое слово `mutable`:
+
+```cpp
+int main() {
+    int counter = 0;
+    
+    // Без mutable - ошибка компиляции
+    // auto increment = [counter]() { counter++; }; // Ошибка!
+    
+    // С mutable - работает
+    auto increment = [counter]() mutable { 
+        counter++; 
+        std::cout << "Counter: " << counter << std::endl;
+    };
+    
+    increment(); // Counter: 1
+    increment(); // Counter: 2
+    
+    std::cout << "Original counter: " << counter << std::endl; // 0
+}
+```
+
+### Явное указание типа возвращаемого значения
+
+Хотя компилятор обычно может вывести тип возвращаемого значения, иногда его нужно указать явно:
+
+```cpp
+// Автоматическое выведение типа
+auto simple_lambda = [](int x) { return x * 2; };
+
+// Явное указание типа возвращаемого значения
+auto explicit_lambda = [](int x) -> double { 
+    return x * 2.5; 
+};
+
+// Полезно для сложных случаев
+auto conditional_lambda = [](bool condition) -> std::string {
+    if (condition) {
+        return "true";
+    } else {
+        return "false";
+    }
+};
+```
+
+### Рекурсивные лямбды
+
+Лямбда-функции могут быть рекурсивными, но это требует особого подхода:
+
+```cpp
+#include <functional>
+
+int main() {
+    // Способ 1: Использование std::function
+    std::function<int(int)> factorial = [&factorial](int n) -> int {
+        return n <= 1 ? 1 : n * factorial(n - 1);
+    };
+    
+    std::cout << "5! = " << factorial(5) << std::endl; // 120
+    
+    // Способ 2: Передача лямбды самой себе
+    auto fibonacci = [](int n) {
+        auto fib_impl = [](int n, auto& self) -> int {
+            return n <= 1 ? n : self(n - 1, self) + self(n - 2, self);
+        };
+        return fib_impl(n, fib_impl);
+    };
+    
+    std::cout << "Fibonacci(10) = " << fibonacci(10) << std::endl; // 55
+}
+```
+
+### Лямбды как параметры шаблонов
+
+Лямбды можно использовать в качестве параметров шаблонов:
+
+```cpp
+template<typename Func>
+void repeat_action(int times, Func action) {
+    for (int i = 0; i < times; ++i) {
+        action(i);
+    }
+}
+
+int main() {
+    repeat_action(5, [](int i) {
+        std::cout << "Iteration " << i << std::endl;
+    });
+    
+    int sum = 0;
+    repeat_action(10, [&sum](int i) {
+        sum += i;
+    });
+    std::cout << "Sum: " << sum << std::endl; // 45
+}
+```
+
+### Лямбды и алгоритмы STL
+
+Лямбды идеально подходят для использования с алгоритмами STL:
+
+```cpp
+#include <algorithm>
+#include <vector>
+#include <numeric>
+
+int main() {
+    std::vector<int> numbers = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    
+    // Фильтрация четных чисел
+    std::vector<int> even_numbers;
+    std::copy_if(numbers.begin(), numbers.end(), 
+                 std::back_inserter(even_numbers),
+                 [](int n) { return n % 2 == 0; });
+    
+    // Преобразование элементов
+    std::vector<int> squared;
+    std::transform(numbers.begin(), numbers.end(), 
+                   std::back_inserter(squared),
+                   [](int n) { return n * n; });
+    
+    // Поиск элемента
+    auto it = std::find_if(numbers.begin(), numbers.end(),
+                          [](int n) { return n > 5; });
+    
+    // Подсчет элементов
+    int count = std::count_if(numbers.begin(), numbers.end(),
+                             [](int n) { return n % 3 == 0; });
+    
+    // Аккумуляция с лямбдой
+    int product = std::accumulate(numbers.begin(), numbers.end(), 1,
+                                 [](int acc, int n) { return acc * n; });
+    
+    std::cout << "Product: " << product << std::endl;
+}
+```
+
+### Захват this в лямбдах
+
+В методах класса можно захватывать указатель this:
+
+```cpp
+class Calculator {
+private:
+    int multiplier = 10;
+    
+public:
+    void process_numbers(std::vector<int>& numbers) {
+        // Захват this по значению
+        std::for_each(numbers.begin(), numbers.end(),
+                     [this](int& n) { n *= multiplier; });
+    }
+    
+    auto get_multiplier_function() {
+        // Возвращаем лямбду, которая захватывает this
+        return [this](int value) { return value * multiplier; };
+    }
+};
+```
+
+### Лямбды и исключения
+
+Лямбды могут генерировать и обрабатывать исключения:
+
+```cpp
+#include <stdexcept>
+
+int main() {
+    auto safe_divide = [](double a, double b) -> double {
+        if (b == 0.0) {
+            throw std::invalid_argument("Division by zero");
+        }
+        return a / b;
+    };
+    
+    try {
+        std::cout << safe_divide(10.0, 2.0) << std::endl; // 5
+        std::cout << safe_divide(10.0, 0.0) << std::endl; // Исключение
+    } catch (const std::exception& e) {
+        std::cout << "Error: " << e.what() << std::endl;
+    }
+}
+```
+
+### Лямбды и производительность
+
+Лямбды обычно оптимизируются компилятором лучше, чем указатели на функции:
+
+```cpp
+#include <chrono>
+#include <vector>
+#include <algorithm>
+
+// Обычная функция
+bool is_even_func(int n) {
+    return n % 2 == 0;
+}
+
+int main() {
+    std::vector<int> large_vector(1000000);
+    std::iota(large_vector.begin(), large_vector.end(), 1);
+    
+    auto start = std::chrono::high_resolution_clock::now();
+    
+    // Лямбда (обычно быстрее из-за инлайнинга)
+    auto count_lambda = std::count_if(large_vector.begin(), large_vector.end(),
+                                     [](int n) { return n % 2 == 0; });
+    
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    
+    std::cout << "Lambda count: " << count_lambda 
+              << " Time: " << duration.count() << " microseconds" << std::endl;
+    
+    start = std::chrono::high_resolution_clock::now();
+    
+    // Указатель на функцию (может быть медленнее)
+    auto count_func = std::count_if(large_vector.begin(), large_vector.end(),
+                                   is_even_func);
+    
+    end = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    
+    std::cout << "Function count: " << count_func 
+              << " Time: " << duration.count() << " microseconds" << std::endl;
+}
+```
+
+### Практические советы по использованию лямбд
+
+#### 1. Предпочитайте захват по ссылке для больших объектов
+
+```cpp
+struct LargeObject {
+    std::array<int, 1000> data;
+    // ... много данных
+};
+
+void process_large_object(const LargeObject& obj) {
+    // Хорошо - захват по ссылке
+    auto lambda1 = [&obj](int index) { return obj.data[index]; };
+    
+    // Плохо - дорогое копирование
+    auto lambda2 = [obj](int index) { return obj.data[index]; };
+}
+```
+
+#### 2. Используйте захват по значению для примитивных типов
+
+```cpp
+void process_with_counter() {
+    int counter = 0;
+    
+    // Хорошо для простых типов
+    auto increment = [counter]() mutable { return ++counter; };
+    
+    // Избыточно для int
+    auto increment_ref = [&counter]() { return ++counter; };
+}
+```
+
+#### 3. Будьте осторожны с захватом локальных переменных
+
+```cpp
+std::function<int()> create_dangerous_lambda() {
+    int local_var = 42;
+    
+    // Опасно! local_var будет уничтожена
+    return [&local_var]() { return local_var; };
+}
+
+std::function<int()> create_safe_lambda() {
+    int local_var = 42;
+    
+    // Безопасно - копируем значение
+    return [local_var]() { return local_var; };
+}
+```
+
+#### 4. Используйте auto для параметров, когда это уместно
+
+```cpp
+// Универсальная лямбда для печати
+auto print_anything = [](const auto& item) {
+    std::cout << item << std::endl;
+};
+
+// Можно использовать с разными типами
+print_anything(42);
+print_anything("Hello");
+print_anything(3.14);
+```
+
+Эти дополнения помогут лучше понять возможности и нюансы использования лямбда-функций в C++.
+

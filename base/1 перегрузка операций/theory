@@ -1847,3 +1847,333 @@ int main() {
 }
 C++ позволяет создавать пользовательские литералы для целых значений, значений с плавающей точкой и строк. Например, вы можете создать литерал для удобного получения QString. Но в реальных программах эта возможность используется нечасто, поэтому не будем на ней останавливаться.
 
+## Дополнительные концепции перегрузки операций
+
+### Правила и ограничения перегрузки операций
+
+#### Операции, которые НЕЛЬЗЯ перегружать
+Важно помнить, что не все операции можно перегружать в C++:
+- `::` — разрешение области видимости
+- `.` — доступ к члену объекта
+- `.*` — доступ к члену через указатель на член объекта
+- `?:` — тернарный условный оператор
+- `sizeof` — получение размера типа
+- `typeid` — получение информации о типе
+
+#### Операции, которые можно перегружать только как методы класса
+Некоторые операции могут быть перегружены только как функции-члены класса:
+- `=` — присваивание
+- `[]` — индексирование
+- `()` — вызов функции
+- `->` — доступ к члену через указатель
+
+```cpp
+class MyClass {
+public:
+    // Правильно - как метод класса
+    MyClass& operator=(const MyClass& other);
+    int& operator[](size_t index);
+    int operator()(int x, int y);
+    
+    // Неправильно - нельзя как свободную функцию
+    // friend MyClass& operator=(MyClass& lhs, const MyClass& rhs); // Ошибка!
+};
+```
+
+### Идиомы перегрузки операций
+
+#### Идиома Copy-and-Swap для оператора присваивания
+Безопасный способ реализации оператора присваивания:
+
+```cpp
+class MyClass {
+private:
+    int* data;
+    size_t size;
+    
+public:
+    // Конструктор копирования
+    MyClass(const MyClass& other) : data(new int[other.size]), size(other.size) {
+        std::copy(other.data, other.data + size, data);
+    }
+    
+    // Функция swap
+    void swap(MyClass& other) noexcept {
+        std::swap(data, other.data);
+        std::swap(size, other.size);
+    }
+    
+    // Оператор присваивания через copy-and-swap
+    MyClass& operator=(MyClass other) {  // Передача по значению!
+        swap(other);
+        return *this;
+    }
+    
+    ~MyClass() { delete[] data; }
+};
+```
+
+#### Каноническая форма класса (Rule of Three/Five)
+При перегрузке оператора присваивания часто нужно также определить:
+
+```cpp
+class Resource {
+private:
+    int* ptr;
+    
+public:
+    // Конструктор
+    Resource(int value) : ptr(new int(value)) {}
+    
+    // 1. Деструктор
+    ~Resource() { delete ptr; }
+    
+    // 2. Конструктор копирования
+    Resource(const Resource& other) : ptr(new int(*other.ptr)) {}
+    
+    // 3. Оператор присваивания
+    Resource& operator=(const Resource& other) {
+        if (this != &other) {
+            delete ptr;
+            ptr = new int(*other.ptr);
+        }
+        return *this;
+    }
+    
+    // C++11: 4. Конструктор перемещения
+    Resource(Resource&& other) noexcept : ptr(other.ptr) {
+        other.ptr = nullptr;
+    }
+    
+    // C++11: 5. Оператор присваивания перемещения
+    Resource& operator=(Resource&& other) noexcept {
+        if (this != &other) {
+            delete ptr;
+            ptr = other.ptr;
+            other.ptr = nullptr;
+        }
+        return *this;
+    }
+};
+```
+
+### Перегрузка операций для работы с умными указателями
+
+```cpp
+template<typename T>
+class SmartPtr {
+private:
+    T* ptr;
+    
+public:
+    explicit SmartPtr(T* p = nullptr) : ptr(p) {}
+    ~SmartPtr() { delete ptr; }
+    
+    // Запрещаем копирование
+    SmartPtr(const SmartPtr&) = delete;
+    SmartPtr& operator=(const SmartPtr&) = delete;
+    
+    // Разрешаем перемещение
+    SmartPtr(SmartPtr&& other) noexcept : ptr(other.ptr) {
+        other.ptr = nullptr;
+    }
+    
+    SmartPtr& operator=(SmartPtr&& other) noexcept {
+        if (this != &other) {
+            delete ptr;
+            ptr = other.ptr;
+            other.ptr = nullptr;
+        }
+        return *this;
+    }
+    
+    // Операторы доступа
+    T& operator*() const { return *ptr; }
+    T* operator->() const { return ptr; }
+    
+    // Проверка на null
+    explicit operator bool() const { return ptr != nullptr; }
+    
+    // Освобождение ресурса
+    T* release() {
+        T* temp = ptr;
+        ptr = nullptr;
+        return temp;
+    }
+};
+```
+
+### Перегрузка операций для контейнеров
+
+#### Пример класса-обёртки для std::vector с дополнительной функциональностью
+
+```cpp
+template<typename T>
+class SafeVector {
+private:
+    std::vector<T> data;
+    
+public:
+    // Конструкторы
+    SafeVector() = default;
+    SafeVector(std::initializer_list<T> init) : data(init) {}
+    SafeVector(size_t size, const T& value = T{}) : data(size, value) {}
+    
+    // Безопасный доступ по индексу
+    T& operator[](size_t index) {
+        if (index >= data.size()) {
+            throw std::out_of_range("Index out of range");
+        }
+        return data[index];
+    }
+    
+    const T& operator[](size_t index) const {
+        if (index >= data.size()) {
+            throw std::out_of_range("Index out of range");
+        }
+        return data[index];
+    }
+    
+    // Арифметические операции для векторов
+    SafeVector& operator+=(const SafeVector& other) {
+        if (data.size() != other.data.size()) {
+            throw std::invalid_argument("Vector sizes must match");
+        }
+        for (size_t i = 0; i < data.size(); ++i) {
+            data[i] += other.data[i];
+        }
+        return *this;
+    }
+    
+    SafeVector operator+(const SafeVector& other) const {
+        SafeVector result = *this;
+        result += other;
+        return result;
+    }
+    
+    // Скалярное произведение
+    T operator*(const SafeVector& other) const {
+        if (data.size() != other.data.size()) {
+            throw std::invalid_argument("Vector sizes must match");
+        }
+        T result = T{};
+        for (size_t i = 0; i < data.size(); ++i) {
+            result += data[i] * other.data[i];
+        }
+        return result;
+    }
+    
+    // Умножение на скаляр
+    SafeVector& operator*=(const T& scalar) {
+        for (auto& element : data) {
+            element *= scalar;
+        }
+        return *this;
+    }
+    
+    // Операции сравнения
+    bool operator==(const SafeVector& other) const {
+        return data == other.data;
+    }
+    
+    bool operator!=(const SafeVector& other) const {
+        return !(*this == other);
+    }
+    
+    // Вывод в поток
+    friend std::ostream& operator<<(std::ostream& os, const SafeVector& vec) {
+        os << "[";
+        for (size_t i = 0; i < vec.data.size(); ++i) {
+            if (i > 0) os << ", ";
+            os << vec.data[i];
+        }
+        os << "]";
+        return os;
+    }
+    
+    // Полезные методы
+    size_t size() const { return data.size(); }
+    bool empty() const { return data.empty(); }
+    void push_back(const T& value) { data.push_back(value); }
+};
+
+// Умножение на скаляр (скаляр слева)
+template<typename T>
+SafeVector<T> operator*(const T& scalar, const SafeVector<T>& vec) {
+    SafeVector<T> result = vec;
+    result *= scalar;
+    return result;
+}
+```
+
+### Практические советы
+
+#### 1. Симметричность операций
+Если перегружаете бинарную операцию, подумайте о симметричности:
+
+```cpp
+class Number {
+    int value;
+public:
+    Number(int v) : value(v) {}
+    
+    // Метод класса - работает только для Number + Number
+    Number operator+(const Number& other) const {
+        return Number(value + other.value);
+    }
+};
+
+// Свободная функция - работает для Number + int и int + Number
+Number operator+(const Number& lhs, int rhs) {
+    return Number(lhs.value + rhs);
+}
+
+Number operator+(int lhs, const Number& rhs) {
+    return Number(lhs + rhs.value);
+}
+```
+
+#### 2. Последовательность реализации операций
+Реализуйте операции в логическом порядке:
+
+```cpp
+class MyClass {
+public:
+    // Сначала основные операции
+    MyClass& operator+=(const MyClass& other);
+    MyClass& operator-=(const MyClass& other);
+    
+    // Потом производные через основные
+    MyClass operator+(const MyClass& other) const {
+        MyClass result = *this;
+        result += other;
+        return result;
+    }
+    
+    MyClass operator-(const MyClass& other) const {
+        MyClass result = *this;
+        result -= other;
+        return result;
+    }
+};
+```
+
+#### 3. Производительность
+Помните о производительности при перегрузке операций:
+
+```cpp
+// Неэффективно - создаёт временные объекты
+Matrix result = a + b + c + d;
+
+// Эффективнее - используйте составные операции
+Matrix result = a;
+result += b;
+result += c;
+result += d;
+
+// Или предоставьте специальные методы
+Matrix result = Matrix::sum({a, b, c, d});
+```
+
+Эти дополнения помогут лучше понять принципы и лучшие практики перегрузки операций в C++.
+
