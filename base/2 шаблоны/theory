@@ -81,7 +81,7 @@ private:
     PointDouble start_;
     PointDouble end_;
 };
-Чтобы код мог работать и с int, и с double, пришлось создать одинаковые структуры и классы. Наше решение работает, но вместе с тем нарушает принцип DRY — «Не повторяйся» (англ . don’t repeat yourself). Это одно из базовых правил программирования, рекомендующее избегать дублирования кода, чтобы не столкнуться с проблемами, которые мы перечислили выше.
+Чтобы код мог работать и с int, и с double, пришлось создать одинаковые структуры и классы. Наше решение работает, но вместе с тем нарушает принцип DRY — «Не повторяйся» (англ . don't repeat yourself). Это одно из базовых правил программирования, рекомендующее избегать дублирования кода, чтобы не столкнуться с проблемами, которые мы перечислили выше.
 Шаблонные классы и структуры
 В прошлом уроке мы рассмотрели случай, когда необходимость указывать тип данных может привести к дублированию кода и усложнить работу. К счастью, шаблоны могут решить эту проблему!
 Вернёмся к реализации структуры Point для хранения координат типов int и double. Чем больше типов мы используем, тем больше копий Point придётся написать.
@@ -1172,9 +1172,8 @@ int main() {
 Специализация нетиповых параметров
 Специализации успешно работают и для нетиповых шаблонных параметров. Например, мы можем написать функции, по-разному вычисляющие факториал:
 factorial(n)=n!=1∗2∗3∗...∗n.
-factorial(n)=n!=1∗2∗3∗...∗n.
-Если аргумент равен 1, функция должна вернуть 1. В противном случае она должна выполнить рекурсивные вычисления, вызывая саму себя.
-// Для любого Value, кроме 1.
+Если аргумент равен 0, функция должна вернуть 1. В противном случае она должна выполнить рекурсивные вычисления, вызывая саму себя.
+// Для любого Value, кроме 0.
 template<int Value>
 int CountFactorial() {
     return Value * CountFactorial<Value - 1>();
@@ -1187,4 +1186,185 @@ int CountFactorial<0>() {
 }
 Используя это свойство специализаций, можно реализовать сложные compile-time-вычисления, позволяющие получить результат ещё до выполнения программы — сразу на этапе компиляции.
 В современном C++ подобная магия нужна редко: куда лучше использовать constexpr-функции. Код получается проще как для программиста, так и для компилятора.
+
+## Дополнительные концепции шаблонов
+
+### Шаблонные псевдонимы (Template Aliases)
+C++11 введён механизм создания псевдонимов для шаблонов с помощью ключевого слова `using`. Это упрощает работу со сложными шаблонными типами:
+
+```cpp
+// Вместо длинного std::vector<std::pair<std::string, int>>
+template<typename Key, typename Value>
+using Dictionary = std::vector<std::pair<Key, Value>>;
+
+// Теперь можно писать просто:
+Dictionary<std::string, int> my_dict;
+
+// Или создать псевдоним для конкретного типа:
+using StringIntDict = Dictionary<std::string, int>;
+```
+
+### Ограничения шаблонов (Template Constraints)
+Для ограничения типов параметров шаблонов можно использовать SFINAE и type traits:
+
+```cpp
+#include <type_traits>
+
+// Функция работает только с арифметическими типами
+template<typename T>
+typename std::enable_if<std::is_arithmetic<T>::value, T>::type
+add(T a, T b) {
+    return a + b;
+}
+
+// Альтернативный синтаксис с static_assert
+template<typename T>
+T multiply(T a, T b) {
+    static_assert(std::is_arithmetic<T>::value, "T must be arithmetic type");
+    return a * b;
+}
+```
+
+### Шаблонные лямбды (Generic Lambdas) - C++14
+Лямбда-функции также могут быть шаблонными:
+
+```cpp
+// Обычная лямбда
+auto lambda1 = [](int x) { return x * 2; };
+
+// Шаблонная лямбда с auto
+auto lambda2 = [](auto x) { return x * 2; };
+
+// Можно использовать с любыми типами
+std::cout << lambda2(5) << std::endl;      // 10
+std::cout << lambda2(2.5) << std::endl;    // 5.0
+```
+
+### Fold Expressions - C++17
+Для работы с вариативными шаблонами добавлены fold expressions:
+
+```cpp
+// Сумма всех аргументов
+template<typename... Args>
+auto sum(Args... args) {
+    return (args + ...);  // fold expression
+}
+
+// Использование
+std::cout << sum(1, 2, 3, 4, 5) << std::endl;  // 15
+
+// Логическое И для всех аргументов
+template<typename... Args>
+bool all_true(Args... args) {
+    return (args && ...);
+}
+```
+
+### Шаблоны переменных (Variable Templates) - C++14
+Можно создавать шаблонные переменные:
+
+```cpp
+template<typename T>
+constexpr T pi = T(3.14159265358979323846);
+
+// Использование
+float pi_f = pi<float>;
+double pi_d = pi<double>;
+```
+
+### Автоматическое выведение типов для шаблонных классов - C++17
+Компилятор может автоматически выводить типы для шаблонных классов:
+
+```cpp
+// До C++17 нужно было писать:
+std::pair<int, std::string> p1{42, "hello"};
+
+// С C++17 можно просто:
+std::pair p2{42, "hello"};  // автоматически выводится std::pair<int, const char*>
+
+// Работает и с пользовательскими классами:
+template<typename T>
+class MyContainer {
+public:
+    MyContainer(T value) : data(value) {}
+private:
+    T data;
+};
+
+MyContainer container{42};  // автоматически MyContainer<int>
+```
+
+### Практические советы по использованию шаблонов
+
+#### 1. Предпочитайте `typename` вместо `class` для типовых параметров
+```cpp
+// Предпочтительно
+template<typename T>
+void func(T value);
+
+// Менее предпочтительно (хотя работает одинаково)
+template<class T>
+void func(T value);
+```
+
+#### 2. Используйте SFINAE для условной компиляции
+```cpp
+// Функция работает только с целочисленными типами
+template<typename T>
+typename std::enable_if<std::is_integral<T>::value, T>::type
+process_integer(T value) {
+    return value * 2;
+}
+```
+
+#### 3. Применяйте `constexpr` для compile-time вычислений
+```cpp
+template<int N>
+constexpr int factorial() {
+    if (N <= 1) {
+        return 1;
+    } else {
+        return N * factorial<N-1>();
+    }
+}
+
+// Вычисляется во время компиляции
+constexpr int result = factorial<5>();  // 120
+```
+
+### Распространённые ошибки при работе с шаблонами
+
+#### 1. Забыть про двухфазный поиск имён
+```cpp
+template<typename T>
+void func() {
+    // Ошибка: helper не найден
+    helper();  // Нужно: this->helper() или Base<T>::helper()
+}
+```
+
+#### 2. Проблемы с зависимыми типами
+```cpp
+template<typename T>
+void func() {
+    // Ошибка: компилятор не знает, что iterator - это тип
+    T::iterator it;  // Нужно: typename T::iterator it;
+}
+```
+
+#### 3. Неправильное использование специализации
+```cpp
+// Неправильно - частичная специализация функций не поддерживается
+template<typename T>
+void func(T value) { /* ... */ }
+
+template<typename T>
+void func<std::vector<T>>(std::vector<T> value) { /* Ошибка! */ }
+
+// Правильно - используйте перегрузку
+template<typename T>
+void func(std::vector<T> value) { /* ... */ }
+```
+
+Эти дополнения помогут лучше понять современные возможности шаблонов C++ и избежать распространённых ошибок.
 
