@@ -825,3 +825,567 @@ try {
 // Ошибка: Неверный формат строки.
 // Функция отработала без ошибок.
 В этом уроке рассмотрен простой способ создания своих исключений. В более сложных ситуациях вы можете сделать исключение собственного типа частным случаем другого исключения, например std::runtime_error. Для этого используют наследование, которое вы изучите далее.
+
+Дополнительный материал для экзамена (C++17 и лучшие практики для тестирования и исключений)
+
+Современные подходы к тестированию в C++17
+
+1. Использование auto и структурированных привязок в тестах
+// До C++17
+std::pair<bool, std::string> result = ValidateInput("test");
+EXPECT_TRUE(result.first);
+EXPECT_EQ(result.second, "valid");
+
+// С C++17
+auto [is_valid, message] = ValidateInput("test");
+EXPECT_TRUE(is_valid);
+EXPECT_EQ(message, "valid");
+
+2. Тестирование с std::optional
+#include <optional>
+
+std::optional<int> ParseInt(const std::string& str) {
+    try {
+        return std::stoi(str);
+    } catch (...) {
+        return std::nullopt;
+    }
+}
+
+// Тестирование
+TEST(ParseIntTest, ValidInput) {
+    auto result = ParseInt("123");
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(*result, 123);
+}
+
+TEST(ParseIntTest, InvalidInput) {
+    auto result = ParseInt("abc");
+    EXPECT_FALSE(result.has_value());
+}
+
+3. Тестирование с std::variant
+#include <variant>
+
+using Result = std::variant<int, std::string>; // Успех или ошибка
+
+Result Divide(int a, int b) {
+    if (b == 0) {
+        return std::string("Division by zero");
+    }
+    return a / b;
+}
+
+// Тестирование
+TEST(DivideTest, ValidDivision) {
+    auto result = Divide(10, 2);
+    ASSERT_TRUE(std::holds_alternative<int>(result));
+    EXPECT_EQ(std::get<int>(result), 5);
+}
+
+TEST(DivideTest, DivisionByZero) {
+    auto result = Divide(10, 0);
+    ASSERT_TRUE(std::holds_alternative<std::string>(result));
+    EXPECT_EQ(std::get<std::string>(result), "Division by zero");
+}
+
+Продвинутые техники тестирования
+
+1. Параметризованные тесты
+class CalculatorTest : public ::testing::TestWithParam<std::tuple<int, int, int>> {};
+
+TEST_P(CalculatorTest, Addition) {
+    auto [a, b, expected] = GetParam();
+    EXPECT_EQ(Calculator::Add(a, b), expected);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    AdditionTests,
+    CalculatorTest,
+    ::testing::Values(
+        std::make_tuple(1, 2, 3),
+        std::make_tuple(0, 0, 0),
+        std::make_tuple(-1, 1, 0),
+        std::make_tuple(100, -50, 50)
+    )
+);
+
+2. Тестирование с временными ограничениями
+TEST(PerformanceTest, SortingPerformance) {
+    std::vector<int> data(100000);
+    std::iota(data.rbegin(), data.rend(), 1); // Заполняем в обратном порядке
+    
+    auto start = std::chrono::high_resolution_clock::now();
+    std::sort(data.begin(), data.end());
+    auto end = std::chrono::high_resolution_clock::now();
+    
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    EXPECT_LT(duration.count(), 100); // Должно выполниться менее чем за 100мс
+}
+
+3. Тестирование исключений с более точной проверкой
+TEST(ExceptionTest, SpecificExceptionMessage) {
+    EXPECT_THROW({
+        try {
+            ThrowingFunction();
+        } catch (const std::runtime_error& e) {
+            EXPECT_STREQ("Expected error message", e.what());
+            throw; // Повторно выбрасываем для EXPECT_THROW
+        }
+    }, std::runtime_error);
+}
+
+Современные практики логирования
+
+1. Структурированное логирование
+#include <sstream>
+#include <iomanip>
+
+class StructuredLogger {
+public:
+    enum Level { DEBUG, INFO, WARN, ERROR, CRITICAL };
+    
+    template<typename... Args>
+    void Log(Level level, const std::string& message, Args&&... args) {
+        std::ostringstream oss;
+        oss << "[" << GetTimestamp() << "] "
+            << "[" << LevelToString(level) << "] "
+            << FormatMessage(message, std::forward<Args>(args)...) << std::endl;
+        
+        std::cout << oss.str();
+    }
+    
+private:
+    std::string GetTimestamp() {
+        auto now = std::chrono::system_clock::now();
+        auto time_t = std::chrono::system_clock::to_time_t(now);
+        std::ostringstream oss;
+        oss << std::put_time(std::localtime(&time_t), "%Y-%m-%d %H:%M:%S");
+        return oss.str();
+    }
+    
+    template<typename... Args>
+    std::string FormatMessage(const std::string& format, Args&&... args) {
+        if constexpr (sizeof...(args) == 0) {
+            return format;
+        } else {
+            // Простое форматирование - в реальности используйте std::format (C++20)
+            return format; // Упрощенная версия
+        }
+    }
+    
+    std::string LevelToString(Level level) {
+        switch (level) {
+            case DEBUG: return "DEBUG";
+            case INFO: return "INFO";
+            case WARN: return "WARN";
+            case ERROR: return "ERROR";
+            case CRITICAL: return "CRITICAL";
+            default: return "UNKNOWN";
+        }
+    }
+};
+
+// Использование
+StructuredLogger logger;
+logger.Log(StructuredLogger::INFO, "User logged in", "user_id", 123);
+
+2. Логирование с контекстом
+class LogContext {
+private:
+    std::map<std::string, std::string> context_;
+    
+public:
+    LogContext& Add(const std::string& key, const std::string& value) {
+        context_[key] = value;
+        return *this;
+    }
+    
+    std::string ToString() const {
+        std::ostringstream oss;
+        for (const auto& [key, value] : context_) {
+            oss << key << "=" << value << " ";
+        }
+        return oss.str();
+    }
+};
+
+// Использование
+LogContext context;
+context.Add("function", "ProcessOrder")
+       .Add("order_id", "12345")
+       .Add("user_id", "67890");
+
+qInfo() << "Processing started" << context.ToString();
+
+Улучшенная обработка исключений в C++17
+
+1. Использование std::exception_ptr для передачи исключений
+#include <exception>
+#include <future>
+
+std::exception_ptr ProcessAsync() {
+    try {
+        // Какая-то работа, которая может выбросить исключение
+        throw std::runtime_error("Async error");
+    } catch (...) {
+        return std::current_exception();
+    }
+    return nullptr;
+}
+
+void HandleAsyncResult() {
+    auto exception_ptr = ProcessAsync();
+    if (exception_ptr) {
+        try {
+            std::rethrow_exception(exception_ptr);
+        } catch (const std::exception& e) {
+            std::cerr << "Caught async exception: " << e.what() << std::endl;
+        }
+    }
+}
+
+2. Создание иерархии исключений
+class BaseException : public std::exception {
+protected:
+    std::string message_;
+    std::string context_;
+    
+public:
+    BaseException(const std::string& message, const std::string& context = "")
+        : message_(message), context_(context) {}
+    
+    const char* what() const noexcept override {
+        return message_.c_str();
+    }
+    
+    const std::string& GetContext() const { return context_; }
+};
+
+class ValidationException : public BaseException {
+public:
+    ValidationException(const std::string& field, const std::string& reason)
+        : BaseException("Validation failed: " + reason, "field=" + field) {}
+};
+
+class NetworkException : public BaseException {
+public:
+    NetworkException(const std::string& operation, int error_code)
+        : BaseException("Network error during " + operation, "error_code=" + std::to_string(error_code)) {}
+};
+
+// Использование
+try {
+    if (email.empty()) {
+        throw ValidationException("email", "Email cannot be empty");
+    }
+} catch (const ValidationException& e) {
+    std::cerr << e.what() << " [" << e.GetContext() << "]" << std::endl;
+}
+
+3. RAII для безопасной обработки ресурсов
+class FileGuard {
+private:
+    std::FILE* file_;
+    
+public:
+    explicit FileGuard(const std::string& filename, const std::string& mode)
+        : file_(std::fopen(filename.c_str(), mode.c_str())) {
+        if (!file_) {
+            throw std::runtime_error("Failed to open file: " + filename);
+        }
+    }
+    
+    ~FileGuard() {
+        if (file_) {
+            std::fclose(file_);
+        }
+    }
+    
+    // Запрещаем копирование
+    FileGuard(const FileGuard&) = delete;
+    FileGuard& operator=(const FileGuard&) = delete;
+    
+    // Разрешаем перемещение
+    FileGuard(FileGuard&& other) noexcept : file_(other.file_) {
+        other.file_ = nullptr;
+    }
+    
+    FileGuard& operator=(FileGuard&& other) noexcept {
+        if (this != &other) {
+            if (file_) std::fclose(file_);
+            file_ = other.file_;
+            other.file_ = nullptr;
+        }
+        return *this;
+    }
+    
+    std::FILE* Get() const { return file_; }
+};
+
+// Использование
+try {
+    FileGuard file("data.txt", "r");
+    // Работа с файлом
+    // Файл автоматически закроется при выходе из области видимости
+} catch (const std::exception& e) {
+    std::cerr << "File operation failed: " << e.what() << std::endl;
+}
+
+Продвинутые техники отладки
+
+1. Условная компиляция отладочного кода
+#ifdef DEBUG
+    #define DEBUG_PRINT(x) std::cout << "[DEBUG] " << x << std::endl
+    #define DEBUG_ASSERT(condition) assert(condition)
+#else
+    #define DEBUG_PRINT(x)
+    #define DEBUG_ASSERT(condition)
+#endif
+
+void ComplexFunction(const std::vector<int>& data) {
+    DEBUG_PRINT("Entering ComplexFunction with " << data.size() << " elements");
+    DEBUG_ASSERT(!data.empty());
+    
+    // Основная логика функции
+    for (size_t i = 0; i < data.size(); ++i) {
+        DEBUG_PRINT("Processing element " << i << ": " << data[i]);
+        // Обработка элемента
+    }
+    
+    DEBUG_PRINT("Exiting ComplexFunction");
+}
+
+2. Профилирование производительности
+class ScopeTimer {
+private:
+    std::chrono::high_resolution_clock::time_point start_;
+    std::string name_;
+    
+public:
+    explicit ScopeTimer(const std::string& name) 
+        : start_(std::chrono::high_resolution_clock::now()), name_(name) {}
+    
+    ~ScopeTimer() {
+        auto end = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start_);
+        std::cout << "[TIMER] " << name_ << " took " << duration.count() << " microseconds" << std::endl;
+    }
+};
+
+#define PROFILE_SCOPE(name) ScopeTimer timer(name)
+
+void ExpensiveOperation() {
+    PROFILE_SCOPE("ExpensiveOperation");
+    
+    // Какая-то дорогая операция
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+}
+
+Интеграция с современными инструментами
+
+1. Использование Sanitizers
+// Компиляция с AddressSanitizer:
+// g++ -fsanitize=address -g -o program program.cpp
+
+// Компиляция с ThreadSanitizer:
+// g++ -fsanitize=thread -g -o program program.cpp
+
+// Компиляция с UndefinedBehaviorSanitizer:
+// g++ -fsanitize=undefined -g -o program program.cpp
+
+void TestWithSanitizer() {
+    std::vector<int> vec = {1, 2, 3};
+    
+    // AddressSanitizer поймает выход за границы
+    // int value = vec[10]; // Ошибка!
+    
+    int value = vec[2]; // Корректно
+}
+
+2. Статический анализ кода
+// Использование clang-tidy:
+// clang-tidy program.cpp -checks='*' -- -std=c++17
+
+// Аннотации для статического анализа
+[[nodiscard]] int ImportantCalculation(int x, int y) {
+    return x * y + 42;
+}
+
+void SomeFunction() {
+    // Предупреждение: результат функции игнорируется
+    // ImportantCalculation(5, 10);
+    
+    // Корректно
+    int result = ImportantCalculation(5, 10);
+    std::cout << "Result: " << result << std::endl;
+}
+
+Лучшие практики для тестирования и отладки
+
+1. Принципы написания хороших тестов
+// ARRANGE - подготовка данных
+// ACT - выполнение действия
+// ASSERT - проверка результата
+
+TEST(StringUtilsTest, TrimWhitespace) {
+    // ARRANGE
+    std::string input = "  hello world  ";
+    std::string expected = "hello world";
+    
+    // ACT
+    std::string result = TrimWhitespace(input);
+    
+    // ASSERT
+    EXPECT_EQ(result, expected);
+}
+
+2. Тестирование граничных случаев
+TEST(VectorUtilsTest, FindMaxElement) {
+    // Пустой вектор
+    std::vector<int> empty_vec;
+    EXPECT_THROW(FindMaxElement(empty_vec), std::invalid_argument);
+    
+    // Один элемент
+    std::vector<int> single_vec = {42};
+    EXPECT_EQ(FindMaxElement(single_vec), 42);
+    
+    // Все элементы одинаковые
+    std::vector<int> same_vec = {5, 5, 5, 5};
+    EXPECT_EQ(FindMaxElement(same_vec), 5);
+    
+    // Максимум в начале
+    std::vector<int> max_first = {10, 2, 3, 4};
+    EXPECT_EQ(FindMaxElement(max_first), 10);
+    
+    // Максимум в конце
+    std::vector<int> max_last = {1, 2, 3, 10};
+    EXPECT_EQ(FindMaxElement(max_last), 10);
+    
+    // Отрицательные числа
+    std::vector<int> negative = {-5, -1, -10, -3};
+    EXPECT_EQ(FindMaxElement(negative), -1);
+}
+
+3. Мокирование зависимостей
+class DatabaseInterface {
+public:
+    virtual ~DatabaseInterface() = default;
+    virtual bool SaveUser(const User& user) = 0;
+    virtual std::optional<User> GetUser(int id) = 0;
+};
+
+class MockDatabase : public DatabaseInterface {
+public:
+    MOCK_METHOD(bool, SaveUser, (const User& user), (override));
+    MOCK_METHOD(std::optional<User>, GetUser, (int id), (override));
+};
+
+class UserService {
+private:
+    std::unique_ptr<DatabaseInterface> db_;
+    
+public:
+    explicit UserService(std::unique_ptr<DatabaseInterface> db) : db_(std::move(db)) {}
+    
+    bool CreateUser(const std::string& name, const std::string& email) {
+        if (name.empty() || email.empty()) {
+            return false;
+        }
+        
+        User user{0, name, email};
+        return db_->SaveUser(user);
+    }
+};
+
+// Тестирование с мокированием
+TEST(UserServiceTest, CreateUserSuccess) {
+    auto mock_db = std::make_unique<MockDatabase>();
+    
+    EXPECT_CALL(*mock_db, SaveUser(testing::_))
+        .WillOnce(testing::Return(true));
+    
+    UserService service(std::move(mock_db));
+    
+    bool result = service.CreateUser("John Doe", "john@example.com");
+    EXPECT_TRUE(result);
+}
+
+Обработка ошибок в многопоточной среде
+
+1. Безопасная передача исключений между потоками
+#include <thread>
+#include <future>
+
+class ThreadSafeProcessor {
+public:
+    std::future<int> ProcessAsync(int value) {
+        return std::async(std::launch::async, [value]() -> int {
+            if (value < 0) {
+                throw std::invalid_argument("Value must be non-negative");
+            }
+            
+            // Симуляция долгой работы
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            
+            return value * 2;
+        });
+    }
+};
+
+// Использование
+ThreadSafeProcessor processor;
+auto future = processor.ProcessAsync(-5);
+
+try {
+    int result = future.get(); // Исключение будет повторно выброшено здесь
+    std::cout << "Result: " << result << std::endl;
+} catch (const std::exception& e) {
+    std::cerr << "Error: " << e.what() << std::endl;
+}
+
+2. Логирование в многопоточной среде
+class ThreadSafeLogger {
+private:
+    mutable std::mutex mutex_;
+    std::ofstream file_;
+    
+public:
+    explicit ThreadSafeLogger(const std::string& filename) : file_(filename) {}
+    
+    template<typename... Args>
+    void Log(const std::string& level, Args&&... args) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        auto now = std::chrono::system_clock::now();
+        auto time_t = std::chrono::system_clock::to_time_t(now);
+        
+        file_ << "[" << std::put_time(std::localtime(&time_t), "%Y-%m-%d %H:%M:%S") << "] "
+              << "[" << level << "] "
+              << "[Thread:" << std::this_thread::get_id() << "] ";
+        
+        (file_ << ... << args) << std::endl;
+    }
+};
+
+// Использование в многопоточной среде
+ThreadSafeLogger logger("app.log");
+
+void WorkerFunction(int worker_id) {
+    try {
+        logger.Log("INFO", "Worker ", worker_id, " started");
+        
+        // Какая-то работа
+        if (worker_id % 2 == 0) {
+            throw std::runtime_error("Simulated error in worker " + std::to_string(worker_id));
+        }
+        
+        logger.Log("INFO", "Worker ", worker_id, " completed successfully");
+    } catch (const std::exception& e) {
+        logger.Log("ERROR", "Worker ", worker_id, " failed: ", e.what());
+    }
+}
+
+Заключение дополнительного материала
+
+Современные практики тестирования и обработки исключений в C++17 значительно улучшают качество и надежность кода. Использование структурированных привязок, std::optional, std::variant и других возможностей C++17 делает тесты более читаемыми и выразительными. Правильная организация иерархии исключений, применение RAII и безопасная работа с ресурсами критически важны для создания устойчивых приложений. Интеграция современных инструментов анализа кода и профилирования помогает выявлять проблемы на ранних стадиях разработки.
