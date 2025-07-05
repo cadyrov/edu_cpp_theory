@@ -416,7 +416,7 @@ int Factorial(int n) {
 Сортировка слиянием
 В C++ можно использовать рекурсию для сортировки массива. Более того, многие алгоритмы сортировки её используют. Один из таких алгоритмов — сортировка слиянием (англ. merge sort).
 Чтобы реализовать этот алгоритм как рекурсивную функцию для сортировки массива, можно разбить исходный массив на две половины и отсортировать каждую из них, а затем объединить две отсортированные половины в один отсортированный массив.
-Сортировка половин — это рекурсивные вызовы. Объединение отсортированных массивов в один — действие. Это объединение, центральная часть алгоритма, называется слиянием. Корнер-кейсом в данном алгоритме сортировки будет пустой массив или массив из одного числа. Такие массивы всегда «отсортированы».
+Сортировка половин — это рекурсивные вызовы. Объединение отсортированных массивов в один — действие. Это объединение, центральная часть алгоритма, называется слиянием. Корнер-кесом в данном алгоритме сортировки будет пустой массив или массив из одного числа. Такие массивы всегда «отсортированы».
 В алгоритме сортировки слиянием используется принцип разделяй и властвуй. Это еще одна популярная техника построения алгоритмов. Главная идея этого принципа — сведение задачи к меньшим по размеру подзадачам для их простого решения. Важно, чтобы сведение получалось сделать эффективно. Алгоритмы, использующие принцип «разделяй и властвуй», часто реализуют, используя рекурсию.
 Алгоритм сортировки слиянием выглядит так: исходный массив делится пополам и сортируется рекурсивными вызовами.
 std::vector<int> MergeSort(const std::vector<int>& arr) {
@@ -454,3 +454,362 @@ std::vector<int> Merge(const std::vector<int>& arr1, const std::vector<int>& arr
 Эти шаги повторяются, пока в обоих входных массивах остаются элементы. Следующими будут 8, 9 и 12. После чего arr1 закончится.
 В данном примере первым закончится arr1. После чего в arr2 останутся элементы 15, 18 и 27. Их нужно скопировать в результирующий массив.
 Сортировка слиянием — один из эффективных алгоритмов. К его преимуществам относятся предсказуемость времени работы алгоритма и стабильность. Сортировку называют стабильной, если она не меняет относительный порядок равных (согласно выбранной операции сравнения) элементов. Можно написать слияние так, что при равенстве элементов алгоритм возьмёт элемент из левого массива arr1 в первую очередь. Тогда сортировка слиянием будет стабильной.
+
+Дополнительный материал для экзамена (C++17 и лучшие практики для других контейнеров)
+
+Новые возможности C++17 для контейнеров-адаптеров
+
+1. Автоматический вывод типов шаблонов (CTAD)
+До C++17:
+std::stack<int> int_stack;
+std::queue<std::string> string_queue;
+std::deque<double> double_deque;
+
+С C++17:
+std::stack int_stack{std::deque<int>{1, 2, 3}}; // автоматически std::stack<int>
+std::queue string_queue{std::deque<std::string>{"a", "b"}}; // автоматически std::queue<std::string>
+std::deque double_deque{1.0, 2.0, 3.0}; // автоматически std::deque<double>
+
+2. Структурированные привязки с парами из очереди приоритетов
+std::priority_queue<std::pair<int, std::string>> pq;
+pq.emplace(1, "first");
+pq.emplace(2, "second");
+
+auto [priority, value] = pq.top();
+std::cout << "Priority: " << priority << ", Value: " << value << std::endl;
+
+3. Новые алгоритмы поиска в C++17
+#include <algorithm>
+#include <functional>
+
+std::vector<int> data = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+// clamp - ограничивает значение диапазоном
+int clamped = std::clamp(15, 1, 10); // результат: 10
+
+// sample - случайная выборка элементов
+std::vector<int> sample_result;
+std::random_device rd;
+std::mt19937 gen(rd());
+std::sample(data.begin(), data.end(), std::back_inserter(sample_result), 3, gen);
+
+Лучшие практики для контейнеров-адаптеров
+
+1. Выбор правильного базового контейнера
+// Для stack - предпочтительно deque (по умолчанию)
+std::stack<int> stack_default; // использует deque
+std::stack<int, std::vector<int>> stack_vector; // для экономии памяти
+std::stack<int, std::list<int>> stack_list; // для частых операций в середине
+
+// Для queue - только deque или list (vector не подходит!)
+std::queue<int> queue_default; // использует deque
+std::queue<int, std::list<int>> queue_list; // для больших объектов
+
+// Для priority_queue - vector (по умолчанию)
+std::priority_queue<int> pq_default; // использует vector
+std::priority_queue<int, std::deque<int>> pq_deque; // альтернатива
+
+2. Эффективная работа со стеком
+std::stack<std::string> string_stack;
+
+// Неэффективно - создание временного объекта
+string_stack.push(std::string("hello"));
+
+// Эффективно - конструирование на месте
+string_stack.emplace("hello");
+
+// Безопасная проверка перед доступом
+if (!string_stack.empty()) {
+    std::cout << string_stack.top() << std::endl;
+    string_stack.pop();
+}
+
+3. Работа с очередью приоритетов
+// Кастомный компаратор для min-heap
+std::priority_queue<int, std::vector<int>, std::greater<int>> min_heap;
+
+// Для сложных объектов
+struct Task {
+    int priority;
+    std::string description;
+    
+    bool operator<(const Task& other) const {
+        return priority < other.priority; // max-heap по приоритету
+    }
+};
+
+std::priority_queue<Task> task_queue;
+task_queue.emplace(Task{5, "High priority task"});
+task_queue.emplace(Task{1, "Low priority task"});
+
+Продвинутые алгоритмы поиска и сортировки
+
+1. Параллельные алгоритмы C++17
+#include <execution>
+#include <algorithm>
+
+std::vector<int> large_data(1000000);
+std::iota(large_data.begin(), large_data.end(), 1);
+
+// Параллельная сортировка
+std::sort(std::execution::par_unseq, large_data.begin(), large_data.end());
+
+// Параллельный поиск
+auto it = std::find(std::execution::par, large_data.begin(), large_data.end(), 50000);
+
+2. Улучшенные алгоритмы бинарного поиска
+template<typename Iterator, typename T, typename Compare>
+Iterator advanced_binary_search(Iterator first, Iterator last, const T& value, Compare comp) {
+    Iterator it = std::lower_bound(first, last, value, comp);
+    if (it != last && !comp(value, *it)) {
+        return it; // найден
+    }
+    return last; // не найден
+}
+
+// Использование с кастомным компаратором
+std::vector<std::pair<int, std::string>> data = {{1, "one"}, {2, "two"}, {3, "three"}};
+
+auto it = advanced_binary_search(data.begin(), data.end(), 
+    std::make_pair(2, ""), 
+    [](const auto& a, const auto& b) { return a.first < b.first; });
+
+3. Эффективная работа с equal_range
+std::vector<int> sorted_data = {1, 2, 2, 2, 3, 4, 5};
+
+auto [lower, upper] = std::equal_range(sorted_data.begin(), sorted_data.end(), 2);
+std::cout << "Количество элементов равных 2: " << std::distance(lower, upper) << std::endl;
+
+// Удаление всех вхождений элемента
+sorted_data.erase(lower, upper);
+
+Оптимизация рекурсивных алгоритмов
+
+1. Хвостовая рекурсия (tail recursion optimization)
+// Неоптимальная рекурсия
+int factorial_slow(int n) {
+    if (n <= 1) return 1;
+    return n * factorial_slow(n - 1);
+}
+
+// Оптимизированная хвостовая рекурсия
+int factorial_fast(int n, int acc = 1) {
+    if (n <= 1) return acc;
+    return factorial_fast(n - 1, n * acc);
+}
+
+2. Мемоизация для оптимизации рекурсии
+#include <unordered_map>
+
+std::unordered_map<int, long long> fib_cache;
+
+long long fibonacci_memo(int n) {
+    if (n <= 1) return n;
+    
+    if (fib_cache.find(n) != fib_cache.end()) {
+        return fib_cache[n];
+    }
+    
+    fib_cache[n] = fibonacci_memo(n - 1) + fibonacci_memo(n - 2);
+    return fib_cache[n];
+}
+
+3. Итеративная альтернатива рекурсии
+// Рекурсивный обход дерева
+void traverse_recursive(TreeNode* node) {
+    if (!node) return;
+    
+    process(node);
+    traverse_recursive(node->left);
+    traverse_recursive(node->right);
+}
+
+// Итеративный обход с использованием стека
+void traverse_iterative(TreeNode* root) {
+    if (!root) return;
+    
+    std::stack<TreeNode*> stack;
+    stack.push(root);
+    
+    while (!stack.empty()) {
+        TreeNode* node = stack.top();
+        stack.pop();
+        
+        process(node);
+        
+        if (node->right) stack.push(node->right);
+        if (node->left) stack.push(node->left);
+    }
+}
+
+Современные техники сортировки
+
+1. Гибридные алгоритмы сортировки
+template<typename Iterator>
+void hybrid_sort(Iterator first, Iterator last) {
+    const size_t size = std::distance(first, last);
+    
+    // Для маленьких массивов используем сортировку вставками
+    if (size < 16) {
+        std::sort(first, last); // или insertion_sort
+        return;
+    }
+    
+    // Для больших массивов используем merge sort
+    merge_sort(first, last);
+}
+
+2. Стабильные vs нестабильные сортировки
+std::vector<std::pair<int, char>> data = {{3, 'a'}, {1, 'b'}, {3, 'c'}, {2, 'd'}};
+
+// Стабильная сортировка - сохраняет относительный порядок равных элементов
+std::stable_sort(data.begin(), data.end(), 
+    [](const auto& a, const auto& b) { return a.first < b.first; });
+// Результат: {1,'b'}, {2,'d'}, {3,'a'}, {3,'c'} - порядок 'a' и 'c' сохранен
+
+// Нестабильная сортировка - может изменить порядок равных элементов
+std::sort(data.begin(), data.end(), 
+    [](const auto& a, const auto& b) { return a.first < b.first; });
+// Результат: {1,'b'}, {2,'d'}, {3,'c'}, {3,'a'} - порядок 'a' и 'c' может измениться
+
+3. Частичная сортировка для оптимизации
+std::vector<int> large_data(1000000);
+std::iota(large_data.begin(), large_data.end(), 1);
+std::random_shuffle(large_data.begin(), large_data.end());
+
+// Найти только 10 наименьших элементов
+std::partial_sort(large_data.begin(), large_data.begin() + 10, large_data.end());
+
+// Найти n-й элемент (медиана)
+std::nth_element(large_data.begin(), large_data.begin() + large_data.size()/2, large_data.end());
+
+Типичные ошибки и их избежание
+
+1. Неправильное использование контейнеров-адаптеров
+// ОШИБКА - проверка размера после pop
+std::stack<int> stack;
+stack.pop(); // Неопределенное поведение для пустого стека!
+
+// ПРАВИЛЬНО - проверка перед операцией
+if (!stack.empty()) {
+    int value = stack.top();
+    stack.pop();
+}
+
+2. Неэффективное использование deque
+std::deque<int> dq;
+
+// НЕЭФФЕКТИВНО - много операций вставки в середину
+for (int i = 0; i < 1000; ++i) {
+    dq.insert(dq.begin() + dq.size()/2, i);
+}
+
+// ЭФФЕКТИВНО - используем преимущества deque
+for (int i = 0; i < 500; ++i) {
+    dq.push_front(i);
+    dq.push_back(i + 500);
+}
+
+3. Неправильная работа с алгоритмами поиска
+std::vector<int> data = {1, 3, 5, 7, 9};
+
+// ОШИБКА - использование binary_search на несортированных данных
+std::random_shuffle(data.begin(), data.end());
+bool found = std::binary_search(data.begin(), data.end(), 5); // Неопределенный результат!
+
+// ПРАВИЛЬНО - сначала сортируем
+std::sort(data.begin(), data.end());
+bool found_correct = std::binary_search(data.begin(), data.end(), 5);
+
+Производительность и выбор контейнеров
+
+1. Сравнение производительности контейнеров
+// Для частых операций в начале и конце - deque
+std::deque<int> dq;
+auto start = std::chrono::high_resolution_clock::now();
+for (int i = 0; i < 100000; ++i) {
+    dq.push_front(i);
+    dq.push_back(i);
+}
+auto end = std::chrono::high_resolution_clock::now();
+
+// Для произвольного доступа - vector
+std::vector<int> vec(200000);
+start = std::chrono::high_resolution_clock::now();
+for (int i = 0; i < 100000; ++i) {
+    vec[i] = i;
+    vec[i + 100000] = i;
+}
+end = std::chrono::high_resolution_clock::now();
+
+2. Оптимизация использования памяти
+// Освобождение лишней памяти в vector
+std::vector<int> vec(1000000);
+vec.resize(100);
+vec.shrink_to_fit(); // Освобождаем лишнюю память
+
+// Для deque память освобождается автоматически
+std::deque<int> dq(1000000);
+dq.resize(100); // Память освобождается автоматически
+
+3. Выбор алгоритма в зависимости от данных
+template<typename Container>
+void smart_sort(Container& container) {
+    if (container.size() < 50) {
+        // Для маленьких контейнеров - insertion sort
+        std::sort(container.begin(), container.end());
+    } else if (std::is_sorted(container.begin(), container.end())) {
+        // Уже отсортирован - ничего не делаем
+        return;
+    } else {
+        // Для больших контейнеров - merge sort или quick sort
+        std::sort(container.begin(), container.end());
+    }
+}
+
+Интеграция с современными возможностями C++
+
+1. Использование с ranges (C++20 preview)
+#include <ranges>
+
+std::vector<int> data = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+// Фильтрация и преобразование
+auto result = data | std::views::filter([](int x) { return x % 2 == 0; })
+                   | std::views::transform([](int x) { return x * x; });
+
+2. Работа с move-семантикой
+std::stack<std::unique_ptr<int>> ptr_stack;
+
+// Эффективное перемещение
+ptr_stack.push(std::make_unique<int>(42));
+
+// Получение с перемещением
+if (!ptr_stack.empty()) {
+    auto ptr = std::move(const_cast<std::unique_ptr<int>&>(ptr_stack.top()));
+    ptr_stack.pop();
+}
+
+3. Интеграция с std::optional
+template<typename Stack>
+std::optional<typename Stack::value_type> safe_pop(Stack& stack) {
+    if (stack.empty()) {
+        return std::nullopt;
+    }
+    
+    auto value = stack.top();
+    stack.pop();
+    return value;
+}
+
+// Использование
+std::stack<int> stack;
+stack.push(42);
+
+if (auto value = safe_pop(stack)) {
+    std::cout << "Popped: " << *value << std::endl;
+}
+
+Заключение дополнительного материала
+
+Контейнеры-адаптеры (stack, queue, deque) и алгоритмы поиска являются фундаментальными инструментами в C++. Понимание их внутреннего устройства, правильный выбор базового контейнера и эффективное использование алгоритмов критически важно для написания производительного кода. Современные стандарты C++ предоставляют дополнительные возможности для оптимизации и упрощения работы с этими структурами данных. Рекурсивные алгоритмы, хотя и элегантны, требуют осторожного подхода к оптимизации для избежания проблем с производительностью и переполнением стека.
