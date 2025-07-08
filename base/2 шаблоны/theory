@@ -1368,3 +1368,392 @@ void func(std::vector<T> value) { /* ... */ }
 
 Эти дополнения помогут лучше понять современные возможности шаблонов C++ и избежать распространённых ошибок.
 
+## Лучшие практики / Плохие практики (стандарт до C++17 включительно)
+
+### Объявление шаблонов
+
+**Хорошо:**
+```cpp
+// Используйте typename для типовых параметров
+template<typename T>
+class MyClass {};
+
+// Понятные имена для шаблонных параметров
+template<typename KeyType, typename ValueType>
+class Dictionary {};
+
+// Параметры по умолчанию для удобства
+template<typename T, typename Allocator = std::allocator<T>>
+class Container {};
+```
+
+**Плохо:**
+```cpp
+// class менее выразительно для типовых параметров
+template<class T>
+class MyClass {};
+
+// Непонятные имена параметров
+template<typename A, typename B, typename C>
+class SomeClass {};
+
+// Слишком много обязательных параметров без значений по умолчанию
+template<typename T1, typename T2, typename T3, typename T4, typename T5>
+class OverlyComplexClass {};
+```
+
+### Определение методов шаблонных классов
+
+**Хорошо:**
+```cpp
+// Методы в заголовочном файле (.h/.hpp)
+template<typename T>
+class Vector {
+public:
+    void push_back(const T& value) {
+        // реализация внутри класса
+    }
+    
+    // Или с определением вне класса в том же файле
+    T& at(size_t index);
+};
+
+template<typename T>
+T& Vector<T>::at(size_t index) {
+    return data_[index];
+}
+```
+
+**Плохо:**
+```cpp
+// Определения в .cpp файле без явной инстанциации
+// vector.h
+template<typename T>
+class Vector {
+public:
+    void push_back(const T& value);
+};
+
+// vector.cpp - ошибка линковки!
+template<typename T>
+void Vector<T>::push_back(const T& value) {
+    // реализация
+}
+```
+
+### Работа с зависимыми именами
+
+**Хорошо:**
+```cpp
+template<typename T>
+class Derived : public Base<T> {
+public:
+    void method() {
+        // Явно указываем зависимое имя
+        typename Base<T>::iterator it;
+        this->base_method();
+        Base<T>::static_method();
+    }
+};
+
+// Использование auto для сложных типов
+template<typename Container>
+void process(const Container& container) {
+    auto it = container.begin();  // проще чем typename Container::iterator
+}
+```
+
+**Плохо:**
+```cpp
+template<typename T>
+class Derived : public Base<T> {
+public:
+    void method() {
+        // Ошибка: компилятор не знает что iterator - это тип
+        Base<T>::iterator it;  
+        
+        // Ошибка: не найдет base_method в зависимом базовом классе
+        base_method();
+    }
+};
+```
+
+### Специализация шаблонов
+
+**Хорошо:**
+```cpp
+// Полная специализация класса
+template<typename T>
+class MyClass {
+    // общая реализация
+};
+
+template<>
+class MyClass<bool> {
+    // специализация для bool
+};
+
+// Перегрузка функций вместо частичной специализации
+template<typename T>
+void process(T value) {
+    // общий случай
+}
+
+template<typename T>
+void process(std::vector<T> vec) {
+    // специализация для векторов
+}
+```
+
+**Плохо:**
+```cpp
+// Частичная специализация функций не поддерживается
+template<typename T>
+void process(T value) {}
+
+template<typename T>
+void process<std::vector<T>>(std::vector<T> value) {}  // Ошибка!
+
+// Специализация в неправильном месте
+namespace ns {
+    template<typename T> class MyClass {};
+}
+
+template<>
+class ns::MyClass<int> {};  // Должно быть внутри namespace ns
+```
+
+### Ограничения типов и SFINAE
+
+**Хорошо:**
+```cpp
+// Использование type_traits для ограничений
+template<typename T>
+typename std::enable_if<std::is_arithmetic<T>::value, T>::type
+add(T a, T b) {
+    return a + b;
+}
+
+// static_assert для понятных сообщений об ошибках
+template<typename T>
+void process(T value) {
+    static_assert(std::is_copy_constructible<T>::value, 
+                  "T must be copy constructible");
+}
+
+// Проверка концепций через SFINAE
+template<typename T>
+auto get_size(const T& container) 
+    -> decltype(container.size()) {
+    return container.size();
+}
+```
+
+**Плохо:**
+```cpp
+// Отсутствие ограничений - неясные ошибки компиляции
+template<typename T>
+T add(T a, T b) {
+    return a + b;  // Что если T не поддерживает operator+?
+}
+
+// Попытка специализации вместо SFINAE
+template<typename T>
+void process(T value) {
+    // сложная реализация для всех типов
+}
+
+// Множество специализаций вместо одного SFINAE решения
+template<>
+void process<int>(int value) {}
+template<>
+void process<double>(double value) {}
+// и так далее...
+```
+
+### Вариативные шаблоны (C++11+)
+
+**Хорошо:**
+```cpp
+// Рекурсивная распаковка parameter pack
+template<typename T>
+void print(T&& value) {
+    std::cout << value << std::endl;
+}
+
+template<typename T, typename... Args>
+void print(T&& first, Args&&... args) {
+    std::cout << first << " ";
+    print(args...);
+}
+
+// Perfect forwarding
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args) {
+    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+```
+
+**Плохо:**
+```cpp
+// Забыли perfect forwarding
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args... args) {  // потеря ссылок
+    return std::unique_ptr<T>(new T(args...));  // копирование вместо перемещения
+}
+
+// Неэффективная рекурсия без базового случая
+template<typename... Args>
+void print(Args... args) {
+    // Как остановить рекурсию?
+}
+```
+
+### Использование auto и выведение типов
+
+**Хорошо:**
+```cpp
+// auto для сложных типов
+template<typename Container>
+void process(const Container& container) {
+    auto it = container.begin();
+    auto value = *it;
+}
+
+// Trailing return type для сложных случаев
+template<typename T, typename U>
+auto multiply(T a, U b) -> decltype(a * b) {
+    return a * b;
+}
+
+// decltype для получения типа выражения
+template<typename T>
+void func(T&& param) {
+    using ValueType = typename std::decay<T>::type;
+    ValueType copy = std::forward<T>(param);
+}
+```
+
+**Плохо:**
+```cpp
+// Избыточное указание типов
+template<typename Container>
+void process(const Container& container) {
+    typename Container::const_iterator it = container.begin();
+    typename Container::value_type value = *it;
+}
+
+// Неправильное использование decltype
+template<typename T>
+auto func(T param) -> decltype(param) {  // возвращает по значению даже для ссылок
+    return param;
+}
+```
+
+### Производительность и оптимизация
+
+**Хорошо:**
+```cpp
+// Используйте constexpr для compile-time вычислений
+template<int N>
+constexpr int factorial() {
+    return N <= 1 ? 1 : N * factorial<N-1>();
+}
+
+// Избегайте ненужных копий
+template<typename T>
+void process(const T& value) {  // const reference
+    // обработка
+}
+
+template<typename T>
+void modify(T& value) {  // non-const reference
+    // изменение
+}
+
+// Move semantics для временных объектов
+template<typename T>
+class Container {
+public:
+    void push_back(const T& value) { /* copy */ }
+    void push_back(T&& value) { /* move */ }
+};
+```
+
+**Плохо:**
+```cpp
+// Ненужные копирования
+template<typename T>
+void process(T value) {  // копирование при каждом вызове
+    // обработка
+}
+
+// Игнорирование move semantics
+template<typename T>
+class Container {
+public:
+    void push_back(const T& value) { 
+        data_.push_back(value);  // всегда копия, даже для временных объектов
+    }
+};
+
+// Runtime вычисления вместо compile-time
+template<int N>
+int factorial() {  // не constexpr
+    int result = 1;
+    for (int i = 2; i <= N; ++i) {
+        result *= i;
+    }
+    return result;
+}
+```
+
+### Читаемость и поддержка кода
+
+**Хорошо:**
+```cpp
+// Понятные псевдонимы типов
+template<typename Key, typename Value>
+using Map = std::unordered_map<Key, Value>;
+
+template<typename T>
+using Ptr = std::unique_ptr<T>;
+
+// Документирование ограничений типов
+template<typename Iterator>
+void sort(Iterator begin, Iterator end) {
+    static_assert(std::is_same_v<
+        typename std::iterator_traits<Iterator>::iterator_category,
+        std::random_access_iterator_tag
+    >, "sort requires random access iterators");
+}
+
+// Разумное использование SFINAE
+template<typename T>
+auto to_string(const T& value) 
+    -> std::enable_if_t<std::is_arithmetic_v<T>, std::string> {
+    return std::to_string(value);
+}
+```
+
+**Плохо:**
+```cpp
+// Сложные шаблонные конструкции без объяснений
+template<typename T, typename = std::enable_if_t<
+    std::is_arithmetic_v<T> && !std::is_same_v<T, bool> && 
+    sizeof(T) >= 4 && std::is_signed_v<T>>>
+void mysterious_function(T value) {
+    // что эта функция делает?
+}
+
+// Злоупотребление шаблонами
+template<typename T>
+T add_one(T value) {  // шаблон не нужен для такой простой функции
+    return value + 1;
+}
+
+// Отсутствие документации сложных template metaprogramming конструкций
+template<bool B, typename T = void>
+using enable_if_t = typename std::enable_if<B, T>::type;  // без комментариев
+```
+
