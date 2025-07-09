@@ -614,4 +614,266 @@ public:
 };
 Чтобы обменять содержимое векторов, достаточно поменять значения их полей. Эта операция выполняется за константное время, не требует выделения памяти и не бросает исключений.
 
+## Лучшие практики для эффективных линейных контейнеров (C++17)
+
+### std::vector
+
+**Хорошо:**
+```cpp
+// Резервируем память заранее, если знаем примерный размер
+std::vector<int> numbers;
+numbers.reserve(1000);
+for (int i = 0; i < 1000; ++i) {
+    numbers.push_back(i);
+}
+
+// Используем emplace_back для конструирования на месте
+std::vector<std::string> words;
+words.emplace_back("Hello");  // Конструирует строку на месте
+words.emplace_back(5, 'a');   // Конструирует строку из 5 символов 'a'
+
+// Используем shrink_to_fit для освобождения лишней памяти
+std::vector<int> data(1000);
+data.resize(100);
+data.shrink_to_fit();  // Освобождаем неиспользуемую память
+
+// Используем swap для быстрой очистки с освобождением памяти
+std::vector<int> temp;
+data.swap(temp);  // data теперь пуст и не занимает памяти
+```
+
+**Плохо:**
+```cpp
+// Не резервируем память - много реаллокаций
+std::vector<int> numbers;
+for (int i = 0; i < 1000; ++i) {
+    numbers.push_back(i);  // Множественные реаллокации
+}
+
+// Используем push_back вместо emplace_back
+std::vector<std::string> words;
+words.push_back(std::string("Hello"));  // Создаем временный объект
+
+// Сохраняем указатели после модификации
+std::vector<int> vec = {1, 2, 3};
+int* ptr = &vec[0];
+vec.push_back(4);  // ptr может стать невалидным
+*ptr = 10;  // Неопределенное поведение!
+
+// Используем clear() для освобождения памяти
+std::vector<int> data(1000);
+data.clear();  // Память не освобождается!
+```
+
+### std::deque
+
+**Хорошо:**
+```cpp
+// Используем deque для частых вставок в начало/конец
+std::deque<int> buffer;
+buffer.push_front(1);
+buffer.push_back(2);
+buffer.push_front(0);  // Эффективно
+
+// Используем deque как кольцевой буфер
+class CircularBuffer {
+    std::deque<int> data_;
+    size_t max_size_;
+public:
+    void push(int value) {
+        if (data_.size() >= max_size_) {
+            data_.pop_front();
+        }
+        data_.push_back(value);
+    }
+};
+
+// Избегаем случайного доступа к элементам в середине
+std::deque<int> dq = {1, 2, 3, 4, 5};
+for (auto it = dq.begin(); it != dq.end(); ++it) {
+    process(*it);  // Последовательный доступ
+}
+```
+
+**Плохо:**
+```cpp
+// Используем vector для частых вставок в начало
+std::vector<int> buffer;
+buffer.insert(buffer.begin(), 1);  // Медленно - O(n)
+
+// Частый случайный доступ к элементам deque
+std::deque<int> dq(1000000);
+for (size_t i = 0; i < dq.size(); ++i) {
+    dq[i] = i;  // Медленнее чем vector
+}
+
+// Предполагаем, что элементы deque лежат в памяти подряд
+std::deque<int> dq = {1, 2, 3};
+int* ptr = &dq[0];
+// ptr + 1 может не указывать на dq[1]!
+```
+
+### std::list
+
+**Хорошо:**
+```cpp
+// Используем list для частых вставок/удалений в середине
+std::list<int> numbers = {1, 2, 4, 5};
+auto it = std::find(numbers.begin(), numbers.end(), 4);
+numbers.insert(it, 3);  // O(1) вставка
+
+// Используем специализированные методы list
+std::list<int> list1 = {1, 3, 5};
+std::list<int> list2 = {2, 4, 6};
+list1.merge(list2);  // Эффективное слияние отсортированных списков
+
+// Удаляем элементы эффективно
+std::list<int> numbers = {1, 2, 2, 3, 2, 4};
+numbers.remove(2);  // Удаляет все элементы со значением 2
+
+// Сохраняем итераторы после модификации
+std::list<int> numbers = {1, 2, 3, 4, 5};
+auto it = numbers.begin();
+++it;  // Указывает на 2
+numbers.erase(numbers.begin());  // it остается валидным
+```
+
+**Плохо:**
+```cpp
+// Используем list для случайного доступа
+std::list<int> numbers(1000);
+for (int i = 0; i < 1000; ++i) {
+    auto it = numbers.begin();
+    std::advance(it, i);  // O(n) для каждого доступа
+    *it = i;
+}
+
+// Используем стандартные алгоритмы вместо методов list
+std::list<int> numbers = {3, 1, 4, 1, 5};
+std::sort(numbers.begin(), numbers.end());  // Ошибка компиляции!
+// Правильно: numbers.sort();
+
+// Предполагаем, что итераторы произвольного доступа
+std::list<int> numbers = {1, 2, 3, 4, 5};
+auto it = numbers.begin();
+// it + 2;  // Ошибка компиляции!
+```
+
+### std::array
+
+**Хорошо:**
+```cpp
+// Используем array для фиксированного размера
+std::array<int, 5> coords = {1, 2, 3, 4, 5};
+
+// Передаем array по ссылке
+void process(const std::array<int, 5>& arr) {
+    for (int value : arr) {
+        std::cout << value << " ";
+    }
+}
+
+// Используем array для стековых данных
+std::array<char, 256> buffer;
+std::fill(buffer.begin(), buffer.end(), 0);
+
+// Используем constexpr с array (C++17)
+constexpr std::array<int, 3> values = {1, 2, 3};
+constexpr int sum = values[0] + values[1] + values[2];
+```
+
+**Плохо:**
+```cpp
+// Используем array для динамического размера
+int size = get_size();
+// std::array<int, size> arr;  // Ошибка компиляции!
+
+// Передаем array по значению для больших массивов
+void process(std::array<int, 10000> arr) {  // Медленное копирование
+    // ...
+}
+
+// Пытаемся изменить размер array
+std::array<int, 5> arr = {1, 2, 3, 4, 5};
+// arr.resize(10);  // Метода не существует!
+```
+
+### std::string_view (C++17)
+
+**Хорошо:**
+```cpp
+// Используем string_view для read-only операций
+void print_word(std::string_view word) {
+    std::cout << word << std::endl;
+}
+
+// Эффективная работа с подстроками
+std::string text = "Hello, World!";
+std::string_view hello = text.substr(0, 5);  // Без копирования
+std::string_view world = text.substr(7, 5);
+
+// Используем string_view в качестве параметра
+bool starts_with(std::string_view text, std::string_view prefix) {
+    return text.size() >= prefix.size() && 
+           text.substr(0, prefix.size()) == prefix;
+}
+
+// Литералы string_view
+using namespace std::string_view_literals;
+auto sv = "Hello"sv;
+```
+
+**Плохо:**
+```cpp
+// Сохраняем string_view от временного объекта
+std::string_view get_substring() {
+    std::string temp = "Hello, World!";
+    return std::string_view(temp.substr(0, 5));  // Dangling reference!
+}
+
+// Модифицируем через string_view
+std::string_view sv = "Hello";
+// sv[0] = 'h';  // Ошибка компиляции - string_view read-only
+
+// Используем string_view для владения данными
+class BadClass {
+    std::string_view data_;  // Не владеет данными!
+public:
+    BadClass(const std::string& str) : data_(str) {}  // Опасно!
+};
+```
+
+### Общие принципы выбора контейнера
+
+**Хорошо:**
+```cpp
+// Выбираем контейнер по паттерну использования
+std::vector<int> for_random_access;      // Случайный доступ
+std::deque<int> for_front_back_ops;      // Операции в начале/конце
+std::list<int> for_middle_insertions;    // Вставки в середину
+std::array<int, 10> for_fixed_size;      // Фиксированный размер
+
+// Используем профилирование для выбора
+void benchmark_containers() {
+    // Тестируем разные контейнеры с реальными данными
+    auto start = std::chrono::high_resolution_clock::now();
+    // ... операции с контейнером
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+}
+```
+
+**Плохо:**
+```cpp
+// Используем неподходящий контейнер
+std::list<int> for_sorting;  // list не поддерживает std::sort
+std::vector<int> for_frequent_front_ops;  // Медленные операции в начале
+
+// Игнорируем инвалидацию итераторов
+std::vector<int> vec = {1, 2, 3};
+auto it = vec.begin();
+vec.push_back(4);  // it может стать невалидным
+*it = 10;  // Потенциально неопределенное поведение
+```
+
 
