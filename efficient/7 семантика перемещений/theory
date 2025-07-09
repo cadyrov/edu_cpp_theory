@@ -554,3 +554,380 @@ int main() {
     cout << endl;
     Print("presented", presented);
 }
+
+## Лучшие практики для C++17
+
+### 1. Использование std::move
+
+**ХОРОШО:**
+```cpp
+// Используй std::move для явного перемещения
+std::vector<std::string> data = GetData();
+ProcessData(std::move(data)); // data больше не используется
+
+// Используй std::move в конструкторах перемещения
+class MyClass {
+    std::string name_;
+    std::vector<int> data_;
+public:
+    MyClass(MyClass&& other) noexcept
+        : name_(std::move(other.name_))
+        , data_(std::move(other.data_)) {}
+};
+```
+
+**ПЛОХО:**
+```cpp
+// НЕ используй std::move без необходимости
+std::string GetName() {
+    std::string name = "test";
+    return std::move(name); // Плохо! Мешает RVO
+}
+
+// НЕ используй std::move для локальных переменных в return
+auto func() {
+    std::vector<int> vec;
+    return std::move(vec); // Плохо! Компилятор сам оптимизирует
+}
+```
+
+### 2. Конструкторы и операторы перемещения
+
+**ХОРОШО:**
+```cpp
+class Resource {
+    int* data_;
+public:
+    // Помечай как noexcept для лучшей производительности
+    Resource(Resource&& other) noexcept
+        : data_(std::exchange(other.data_, nullptr)) {}
+    
+    Resource& operator=(Resource&& other) noexcept {
+        if (this != &other) {
+            delete[] data_;
+            data_ = std::exchange(other.data_, nullptr);
+        }
+        return *this;
+    }
+};
+```
+
+**ПЛОХО:**
+```cpp
+class Resource {
+    int* data_;
+public:
+    // Без noexcept и проверки на самоприсваивание
+    Resource(Resource&& other) {
+        data_ = other.data_;
+        other.data_ = nullptr; // Используй std::exchange
+    }
+    
+    Resource& operator=(Resource&& other) {
+        data_ = other.data_; // Утечка памяти!
+        other.data_ = nullptr;
+        return *this;
+    }
+};
+```
+
+### 3. Передача параметров
+
+**ХОРОШО:**
+```cpp
+// Для перемещаемых типов - передача по значению
+void ProcessString(std::string str) {
+    strings_.push_back(std::move(str));
+}
+
+// Для неперемещаемых типов - по const&
+void ProcessData(const ExpensiveNonMovable& data) {
+    // обработка
+}
+
+// Универсальные ссылки для шаблонов
+template<typename T>
+void AddItem(T&& item) {
+    items_.push_back(std::forward<T>(item));
+}
+```
+
+**ПЛОХО:**
+```cpp
+// Избыточные перегрузки
+void ProcessString(const std::string& str) {
+    strings_.push_back(str);
+}
+void ProcessString(std::string&& str) {
+    strings_.push_back(std::move(str));
+}
+
+// Неэффективная передача по значению для неперемещаемых типов
+void ProcessData(ExpensiveNonMovable data) { // Лишнее копирование
+    // обработка
+}
+```
+
+### 4. Контейнеры и алгоритмы
+
+**ХОРОШО:**
+```cpp
+// Используй emplace для конструирования на месте
+std::vector<std::string> vec;
+vec.emplace_back(10, 'a'); // Конструирует строку на месте
+
+// Используй move-итераторы для перемещения диапазонов
+std::vector<std::string> source = GetStrings();
+std::vector<std::string> dest(
+    std::make_move_iterator(source.begin()),
+    std::make_move_iterator(source.end())
+);
+
+// Резервируй место для избежания реаллокаций
+std::vector<std::string> vec;
+vec.reserve(expected_size);
+```
+
+**ПЛОХО:**
+```cpp
+// Используй push_back вместо emplace_back без необходимости
+std::vector<std::string> vec;
+vec.push_back(std::string(10, 'a')); // Лишний временный объект
+
+// Копирование вместо перемещения
+std::vector<std::string> source = GetStrings();
+std::vector<std::string> dest(source.begin(), source.end()); // Копирование
+
+// Не резервируй место заранее
+std::vector<std::string> vec;
+for (int i = 0; i < 1000; ++i) {
+    vec.push_back(std::to_string(i)); // Множественные реаллокации
+}
+```
+
+### 5. RAII и умные указатели
+
+**ХОРОШО:**
+```cpp
+// Используй умные указатели вместо сырых
+std::unique_ptr<Resource> CreateResource() {
+    return std::make_unique<Resource>();
+}
+
+// Перемещай unique_ptr
+std::unique_ptr<Resource> resource = CreateResource();
+ProcessResource(std::move(resource));
+
+// Используй auto для типов
+auto resource = std::make_unique<Resource>();
+```
+
+**ПЛОХО:**
+```cpp
+// Сырые указатели без RAII
+Resource* CreateResource() {
+    return new Resource(); // Кто будет удалять?
+}
+
+// Копирование вместо перемещения unique_ptr
+std::unique_ptr<Resource> resource = CreateResource();
+ProcessResource(resource); // Ошибка компиляции!
+
+// Явное указание типов там, где можно auto
+std::unique_ptr<Resource> resource = std::make_unique<Resource>();
+```
+
+### 6. Исключения и move-семантика
+
+**ХОРОШО:**
+```cpp
+class SafeClass {
+public:
+    // noexcept гарантирует отсутствие исключений
+    SafeClass(SafeClass&& other) noexcept
+        : data_(std::move(other.data_)) {}
+    
+    SafeClass& operator=(SafeClass&& other) noexcept {
+        if (this != &other) {
+            data_ = std::move(other.data_);
+        }
+        return *this;
+    }
+};
+```
+
+**ПЛОХО:**
+```cpp
+class UnsafeClass {
+public:
+    // Без noexcept - может бросать исключения
+    UnsafeClass(UnsafeClass&& other)
+        : data_(std::move(other.data_)) {
+        // Потенциально опасный код
+        if (SomeCondition()) {
+            throw std::runtime_error("Error");
+        }
+    }
+};
+```
+
+### 7. Оптимизации компилятора
+
+**ХОРОШО:**
+```cpp
+// Доверяй RVO и NRVO
+std::string CreateString() {
+    std::string result = "Hello";
+    result += " World";
+    return result; // Не используй std::move
+}
+
+// Используй временные объекты для цепочек вызовов
+auto result = CreateObject()
+    .Method1()
+    .Method2()
+    .Method3();
+```
+
+**ПЛОХО:**
+```cpp
+// Мешай RVO
+std::string CreateString() {
+    std::string result = "Hello";
+    result += " World";
+    return std::move(result); // Плохо!
+}
+
+// Лишние промежуточные переменные
+auto temp1 = CreateObject();
+auto temp2 = temp1.Method1();
+auto temp3 = temp2.Method2();
+auto result = temp3.Method3();
+```
+
+### 8. Специфика C++17
+
+**ХОРОШО:**
+```cpp
+// Используй structured bindings с move
+auto [key, value] = std::move(pair);
+
+// Используй if constexpr для условной компиляции
+template<typename T>
+void process(T&& obj) {
+    if constexpr (std::is_move_constructible_v<T>) {
+        container_.push_back(std::move(obj));
+    } else {
+        container_.push_back(obj);
+    }
+}
+
+// Используй std::optional для возврата значений
+std::optional<std::string> FindValue(const std::string& key) {
+    if (auto it = map_.find(key); it != map_.end()) {
+        return it->second;
+    }
+    return std::nullopt;
+}
+```
+
+**ПЛОХО:**
+```cpp
+// Игнорируй возможности C++17
+std::pair<std::string, int> pair = GetPair();
+std::string key = pair.first;
+int value = pair.second;
+
+// Используй старые способы условной компиляции
+template<typename T>
+void process(T&& obj) {
+    // Старый способ через SFINAE
+}
+
+// Используй исключения для контроля потока
+std::string FindValue(const std::string& key) {
+    auto it = map_.find(key);
+    if (it == map_.end()) {
+        throw std::runtime_error("Not found");
+    }
+    return it->second;
+}
+```
+
+### 9. Производительность
+
+**ХОРОШО:**
+```cpp
+// Минимизируй количество аллокаций
+class Buffer {
+    std::vector<char> data_;
+public:
+    void Resize(size_t new_size) {
+        data_.resize(new_size);
+    }
+    
+    void Append(const char* str, size_t len) {
+        data_.insert(data_.end(), str, str + len);
+    }
+};
+
+// Используй move-семантику в алгоритмах
+std::sort(vec.begin(), vec.end(), 
+    [](const std::string& a, const std::string& b) {
+        return a < b;
+    });
+```
+
+**ПЛОХО:**
+```cpp
+// Множественные аллокации
+class Buffer {
+    std::string data_;
+public:
+    void Append(const std::string& str) {
+        data_ += str; // Потенциальная реаллокация каждый раз
+    }
+};
+
+// Копирование в лямбдах
+std::sort(vec.begin(), vec.end(), 
+    [](std::string a, std::string b) { // Копирование параметров
+        return a < b;
+    });
+```
+
+### 10. Отладка и тестирование
+
+**ХОРОШО:**
+```cpp
+// Добавляй проверки в debug-режиме
+class MyClass {
+    std::unique_ptr<int[]> data_;
+    size_t size_;
+public:
+    MyClass(MyClass&& other) noexcept
+        : data_(std::move(other.data_))
+        , size_(std::exchange(other.size_, 0)) {
+        assert(other.data_ == nullptr);
+    }
+};
+
+// Используй статические проверки
+static_assert(std::is_nothrow_move_constructible_v<MyClass>);
+static_assert(std::is_nothrow_move_assignable_v<MyClass>);
+```
+
+**ПЛОХО:**
+```cpp
+// Игнорируй проверки состояния
+class MyClass {
+    std::unique_ptr<int[]> data_;
+    size_t size_;
+public:
+    MyClass(MyClass&& other) noexcept
+        : data_(std::move(other.data_))
+        , size_(other.size_) {
+        // Не очищаем состояние other
+    }
+};
+```
