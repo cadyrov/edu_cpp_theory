@@ -669,3 +669,333 @@ public:
     void swap(const ArrayPtr& other) noexcept { ... }
     ...
 };
+
+## Лучшие практики и рекомендации (C++17)
+
+### 1. Инициализация узлов и полей
+
+**✅ ХОРОШО:**
+```cpp
+struct Node {
+    Node() = default;
+    Node(const Type& val, Node* next = nullptr) 
+        : value(val), next_node(next) {}
+    
+    Type value{};  // Инициализация по умолчанию
+    Node* next_node = nullptr;  // Явная инициализация
+};
+
+// Использование списка инициализации
+SingleLinkedList() : head_{}, size_(0) {}
+```
+
+**❌ ПЛОХО:**
+```cpp
+struct Node {
+    Node() {}  // Поля остаются неинициализированными
+    Type value;
+    Node* next_node;  // Может содержать мусор
+};
+
+// Присваивание в конструкторе
+SingleLinkedList() {
+    size_ = 0;  // Медленнее, чем инициализация
+}
+```
+
+### 2. Обработка исключений в конструкторах
+
+**✅ ХОРОШО:**
+```cpp
+SingleLinkedList(const SingleLinkedList& other) {
+    SingleLinkedList tmp;
+    for (const auto& item : other) {
+        tmp.PushFront(item);  // Если выбросится исключение, tmp будет корректно разрушен
+    }
+    // Обращаем порядок элементов
+    std::reverse(tmp.begin(), tmp.end());
+    swap(tmp);
+}
+```
+
+**❌ ПЛОХО:**
+```cpp
+SingleLinkedList(const SingleLinkedList& other) {
+    for (const auto& item : other) {
+        PushFront(item);  // Если выбросится исключение, частично построенный объект протечет
+    }
+}
+```
+
+### 3. Использование noexcept
+
+**✅ ХОРОШО:**
+```cpp
+void swap(SingleLinkedList& other) noexcept {
+    std::swap(head_.next_node, other.head_.next_node);
+    std::swap(size_, other.size_);
+}
+
+Iterator begin() noexcept { return Iterator{head_.next_node}; }
+bool IsEmpty() const noexcept { return size_ == 0; }
+```
+
+**❌ ПЛОХО:**
+```cpp
+void swap(SingleLinkedList& other) {  // Не указан noexcept
+    std::swap(head_.next_node, other.head_.next_node);
+    std::swap(size_, other.size_);
+}
+```
+
+### 4. Правильная реализация операторов сравнения
+
+**✅ ХОРОШО:**
+```cpp
+template<typename Type>
+bool operator==(const SingleLinkedList<Type>& lhs, const SingleLinkedList<Type>& rhs) {
+    if (lhs.GetSize() != rhs.GetSize()) return false;
+    return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+template<typename Type>
+bool operator!=(const SingleLinkedList<Type>& lhs, const SingleLinkedList<Type>& rhs) {
+    return !(lhs == rhs);
+}
+```
+
+**❌ ПЛОХО:**
+```cpp
+bool operator==(const SingleLinkedList& other) const {
+    auto it1 = begin();
+    auto it2 = other.begin();
+    while (it1 != end() && it2 != other.end()) {  // Не проверяем размеры заранее
+        if (*it1 != *it2) return false;
+        ++it1; ++it2;
+    }
+    return it1 == end() && it2 == other.end();
+}
+```
+
+### 5. Использование perfect forwarding для эффективности
+
+**✅ ХОРОШО:**
+```cpp
+template<typename T>
+Iterator InsertAfter(ConstIterator pos, T&& value) {
+    Node* new_node = new Node(std::forward<T>(value), pos.node_->next_node);
+    pos.node_->next_node = new_node;
+    ++size_;
+    return Iterator{new_node};
+}
+```
+
+**❌ ПЛОХО:**
+```cpp
+Iterator InsertAfter(ConstIterator pos, const Type& value) {
+    Node* new_node = new Node(value, pos.node_->next_node);  // Всегда копирование
+    pos.node_->next_node = new_node;
+    ++size_;
+    return Iterator{new_node};
+}
+```
+
+### 6. Правильная реализация итераторов
+
+**✅ ХОРОШО:**
+```cpp
+template<typename ValueType>
+class BasicIterator {
+public:
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = Type;
+    using difference_type = std::ptrdiff_t;
+    using pointer = ValueType*;
+    using reference = ValueType&;
+    
+    BasicIterator& operator++() noexcept {
+        node_ = node_->next_node;
+        return *this;
+    }
+    
+    BasicIterator operator++(int) noexcept {
+        auto old_value(*this);
+        ++(*this);
+        return old_value;
+    }
+};
+```
+
+**❌ ПЛОХО:**
+```cpp
+class Iterator {
+    Iterator operator++() {  // Возвращает копию вместо ссылки
+        node_ = node_->next_node;
+        return *this;
+    }
+    
+    Iterator operator++(int) {
+        node_ = node_->next_node;  // Не сохраняет старое значение
+        return *this;
+    }
+};
+```
+
+### 7. Использование RAII для управления ресурсами
+
+**✅ ХОРОШО:**
+```cpp
+template<typename Type>
+class ArrayPtr {
+public:
+    explicit ArrayPtr(size_t size) : raw_ptr_(new Type[size]) {}
+    
+    ~ArrayPtr() {
+        delete[] raw_ptr_;
+    }
+    
+    ArrayPtr(const ArrayPtr&) = delete;
+    ArrayPtr& operator=(const ArrayPtr&) = delete;
+    
+    ArrayPtr(ArrayPtr&& other) noexcept : raw_ptr_(other.Release()) {}
+    
+    Type* Release() noexcept {
+        Type* ptr = raw_ptr_;
+        raw_ptr_ = nullptr;
+        return ptr;
+    }
+};
+```
+
+**❌ ПЛОХО:**
+```cpp
+class BadArrayPtr {
+    Type* ptr_;
+public:
+    BadArrayPtr(size_t size) : ptr_(new Type[size]) {}
+    // Нет деструктора - утечка памяти
+    // Нет запрета копирования - двойное удаление
+};
+```
+
+### 8. Использование [[nodiscard]] для важных возвращаемых значений
+
+**✅ ХОРОШО:**
+```cpp
+[[nodiscard]] bool IsEmpty() const noexcept { return size_ == 0; }
+[[nodiscard]] size_t GetSize() const noexcept { return size_; }
+[[nodiscard]] Iterator begin() noexcept { return Iterator{head_.next_node}; }
+[[nodiscard]] Iterator InsertAfter(ConstIterator pos, const Type& value);
+```
+
+**❌ ПЛОХО:**
+```cpp
+bool IsEmpty() const noexcept { return size_ == 0; }  // Результат можно проигнорировать
+Iterator InsertAfter(ConstIterator pos, const Type& value);  // Важный результат может быть проигнорирован
+```
+
+### 9. Правильная работа с памятью в массивах
+
+**✅ ХОРОШО:**
+```cpp
+// Создание массива с инициализацией
+int* numbers = new int[size]{};  // Инициализация нулями
+
+// Правильное удаление
+delete[] numbers;
+
+// Использование умных указателей
+std::unique_ptr<int[]> smart_array(new int[size]{});
+```
+
+**❌ ПЛОХО:**
+```cpp
+int* numbers = new int[size];  // Неинициализированные данные
+delete numbers;  // Неопределенное поведение - нужен delete[]
+
+// Обращение за границы
+numbers[size] = 42;  // Неопределенное поведение
+```
+
+### 10. Эффективная реализация swap
+
+**✅ ХОРОШО:**
+```cpp
+template<typename Type>
+void swap(SingleLinkedList<Type>& lhs, SingleLinkedList<Type>& rhs) noexcept {
+    lhs.swap(rhs);
+}
+
+void swap(SingleLinkedList& other) noexcept {
+    using std::swap;
+    swap(head_.next_node, other.head_.next_node);
+    swap(size_, other.size_);
+}
+```
+
+**❌ ПЛОХО:**
+```cpp
+void swap(SingleLinkedList& other) {
+    SingleLinkedList temp = *this;  // Дорогое копирование
+    *this = other;
+    other = temp;
+}
+```
+
+### 11. Правильное использование const и constexpr
+
+**✅ ХОРОШО:**
+```cpp
+class SingleLinkedList {
+    static constexpr size_t npos = static_cast<size_t>(-1);
+    
+    [[nodiscard]] const Type& front() const {
+        assert(!IsEmpty());
+        return head_.next_node->value;
+    }
+    
+    [[nodiscard]] ConstIterator begin() const noexcept {
+        return ConstIterator{head_.next_node};
+    }
+};
+```
+
+**❌ ПЛОХО:**
+```cpp
+class SingleLinkedList {
+    static const size_t npos = -1;  // Не constexpr
+    
+    Type& front() {  // Нет const версии
+        return head_.next_node->value;
+    }
+};
+```
+
+### 12. Безопасная работа с итераторами
+
+**✅ ХОРОШО:**
+```cpp
+Iterator EraseAfter(ConstIterator pos) {
+    assert(pos.node_ != nullptr);
+    assert(pos.node_->next_node != nullptr);
+    
+    Node* node_to_delete = pos.node_->next_node;
+    pos.node_->next_node = node_to_delete->next_node;
+    delete node_to_delete;
+    --size_;
+    
+    return Iterator{pos.node_->next_node};
+}
+```
+
+**❌ ПЛОХО:**
+```cpp
+Iterator EraseAfter(ConstIterator pos) {
+    // Нет проверок на nullptr
+    Node* node_to_delete = pos.node_->next_node;
+    pos.node_->next_node = node_to_delete->next_node;
+    delete node_to_delete;
+    --size_;
+    return Iterator{pos.node_->next_node};
+}
+```
