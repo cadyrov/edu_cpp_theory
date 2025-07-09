@@ -630,7 +630,7 @@ Delete logger 1
 LifetimeLogger 1 destroyed
 Exit main
 LifetimeLogger 2 destroyed
-Сначала в динамической памяти создаётся объект LifetimeLogger(1), а следом за ним — LifetimeLogger(2). Время жизни LifetimeLogger(1) заканчивается при выполнении операции delete: вызывается деструктор, который выводит сообщение “LifetimeLogger 1 destroyed”, и освобождается память. LifetimeLogger(2) удаляется автоматически после вывода “Exit main”.
+Сначала в динамической памяти создаётся объект LifetimeLogger(1), а следом за ним — LifetimeLogger(2). Время жизни LifetimeLogger(1) заканчивается при выполнении операции delete: вызывается деструктор, который выводит сообщение "LifetimeLogger 1 destroyed", и освобождается память. LifetimeLogger(2) удаляется автоматически после вывода "Exit main".
 Вы могли обратить внимание, что в этой программе не соблюдается правило «объекты уничтожаются в порядке, обратном порядку их конструирования». Это нормально, так как время жизни объектов в куче контролирует программист, а не компилятор.
 Забота программиста — удалять созданные в куче объекты, когда в них нет необходимости. Память, как и любой ресурс, ограничена. Когда в куче нет свободного места для создания объекта, оператор new выбрасывает исключение std::bad_alloc. Поймав это исключение, программа может сообщить пользователю о нехватке памяти, предложить выйти из программы или сохранить данные на диск.
 Рассмотрим эту ситуацию на примере маленькой, но жадной программы. Она моделирует ситуацию, когда «арендатор», получив земельный участок, «теряет» документы на него. Так как без документов вернуть участок невозможно, все государственные земли быстро станут считаться занятыми, и арендовать будет нечего. Экономика страны продемонстрирует стабильный отрицательный рост с последующей сменой политического режима:
@@ -1474,8 +1474,8 @@ int main() {
     assert(v.GetItems().size() == 2);
 }
 Другая проблема: если при копировании элементов операция new выбросит исключение, PtrVector окажется в промежуточном состоянии. Прежнее содержимое теряется, а новые элементы до конца скопированы не будут.
-Удобнее, когда методы класса обеспечивают строгую гарантию безопасности исключений: операция либо завершается успешно, либо происходит выбрасывание исключения и состояние объекта останется прежним. Такая семантика выполнения также называется “commit or rollback”.
-Обеспечить строгую гарантию безопасности исключений в пользовательской операции присваивания можно, применив идиому “copy-and-swap”. В ней операция присваивания переиспользует функционал конструктора копирования.
+Удобнее, когда методы класса обеспечивают строгую гарантию безопасности исключений: операция либо завершается успешно, либо происходит выбрасывание исключения и состояние объекта останется прежним. Такая семантика выполнения также называется "commit or rollback".
+Обеспечить строгую гарантию безопасности исключений в пользовательской операции присваивания можно, применив идиому "copy-and-swap". В ней операция присваивания переиспользует функционал конструктора копирования.
 Чтобы создать временную копию присваиваемого объекта, примените конструктор копирования. Если во время создания копии будет выброшено исключение, оно повлияет на временную копию, а не на текущий экземпляр класса.
 Обменяйте текущее состояние объекта и временной копии. Эта операция не должна выбрасывать исключений. При выходе из операции присваивания прежнее состояние будет разрушено, а текущее состояние будет равно состоянию правого аргумента.
 Применим copy-and-swap и реализуем операцию присваивания:
@@ -1503,4 +1503,352 @@ public:
     void swap(Object& other) noexcept;
     ~Object();
 };
+
+## Дополнительный материал для лучшего понимания
+
+### Практические рекомендации по работе с памятью (C++17)
+
+#### Управление динамической памятью
+
+**ХОРОШО:**
+```cpp
+// Используем умные указатели вместо raw указателей
+std::unique_ptr<int> ptr = std::make_unique<int>(42);
+std::shared_ptr<std::string> str = std::make_shared<std::string>("Hello");
+
+// RAII - Resource Acquisition Is Initialization
+class FileHandler {
+    std::unique_ptr<FILE, decltype(&fclose)> file_;
+public:
+    FileHandler(const char* filename) 
+        : file_(fopen(filename, "r"), &fclose) {}
+    // Автоматическое освобождение ресурсов в деструкторе
+};
+
+// Используем контейнеры STL для автоматического управления памятью
+std::vector<int> data;
+data.reserve(1000); // Резервируем память заранее
+```
+
+**ПЛОХО:**
+```cpp
+// Сырые указатели без управления памятью
+int* ptr = new int(42);
+// Забыли delete - утечка памяти!
+
+// Двойное удаление
+int* p = new int(10);
+delete p;
+delete p; // Неопределенное поведение!
+
+// Использование после удаления
+int* data = new int[100];
+delete[] data;
+data[0] = 42; // Неопределенное поведение!
+```
+
+#### Выравнивание памяти и производительность
+
+**ХОРОШО:**
+```cpp
+// Правильное выравнивание структур
+struct alignas(16) Vector4 {
+    float x, y, z, w;
+};
+
+// Упаковка данных для лучшей cache locality
+struct Person {
+    int id;        // 4 bytes
+    int age;       // 4 bytes
+    double salary; // 8 bytes
+    // Итого: 16 bytes (хорошо выровнено)
+};
+
+// Использование std::aligned_storage для кастомного размещения
+alignas(64) char cache_line_buffer[64];
+```
+
+**ПЛОХО:**
+```cpp
+// Плохое выравнивание - много padding
+struct BadStruct {
+    char a;     // 1 byte
+    double b;   // 8 bytes (7 bytes padding перед ним)
+    char c;     // 1 byte (7 bytes padding после)
+    // Итого: 24 bytes вместо 10!
+};
+
+// Игнорирование требований выравнивания
+void* ptr = malloc(100);
+double* d = reinterpret_cast<double*>(ptr); // Может быть не выровнено!
+```
+
+#### Работа с указателями
+
+**ХОРОШО:**
+```cpp
+// Проверка на nullptr перед использованием
+if (ptr != nullptr) {
+    *ptr = 42;
+}
+
+// Использование optional для безопасности
+std::optional<int> getValue() {
+    if (condition) {
+        return 42;
+    }
+    return std::nullopt;
+}
+
+// Правильное использование const
+const int* ptr1 = &value;        // Указатель на константу
+int* const ptr2 = &value;        // Константный указатель
+const int* const ptr3 = &value;  // Константный указатель на константу
+```
+
+**ПЛОХО:**
+```cpp
+// Использование неинициализированного указателя
+int* ptr;
+*ptr = 42; // Неопределенное поведение!
+
+// Потеря владения объектом
+int* createData() {
+    int* data = new int[100];
+    return data; // Кто должен удалить?
+}
+
+// Небезопасное приведение типов
+void* ptr = malloc(sizeof(int));
+double* d = (double*)ptr; // Нарушение выравнивания!
+```
+
+#### Копирование и перемещение объектов
+
+**ХОРОШО:**
+```cpp
+class Resource {
+    std::unique_ptr<int[]> data_;
+    size_t size_;
+public:
+    // Конструктор копирования
+    Resource(const Resource& other) 
+        : data_(std::make_unique<int[]>(other.size_))
+        , size_(other.size_) {
+        std::copy(other.data_.get(), other.data_.get() + size_, data_.get());
+    }
+    
+    // Конструктор перемещения
+    Resource(Resource&& other) noexcept 
+        : data_(std::move(other.data_))
+        , size_(other.size_) {
+        other.size_ = 0;
+    }
+    
+    // Операция присваивания через copy-and-swap
+    Resource& operator=(Resource other) {
+        swap(other);
+        return *this;
+    }
+    
+    void swap(Resource& other) noexcept {
+        std::swap(data_, other.data_);
+        std::swap(size_, other.size_);
+    }
+};
+```
+
+**ПЛОХО:**
+```cpp
+class BadResource {
+    int* data_;
+    size_t size_;
+public:
+    // Поверхностное копирование - два объекта владеют одной памятью
+    BadResource(const BadResource& other) 
+        : data_(other.data_), size_(other.size_) {}
+    
+    // Отсутствие проверки на самоприсваивание
+    BadResource& operator=(const BadResource& other) {
+        delete[] data_;
+        data_ = new int[other.size_];
+        size_ = other.size_;
+        // Если other == *this, то data_ уже удален!
+        std::copy(other.data_, other.data_ + size_, data_);
+        return *this;
+    }
+};
+```
+
+#### Управление временем жизни объектов
+
+**ХОРОШО:**
+```cpp
+// Используем локальные переменные где возможно
+void processData() {
+    std::vector<int> data(1000); // Автоматическое управление памятью
+    // ... работа с данными
+    // Автоматическое освобождение при выходе из области видимости
+}
+
+// Четкое управление временем жизни
+class Manager {
+    std::vector<std::unique_ptr<Worker>> workers_;
+public:
+    void addWorker(std::unique_ptr<Worker> worker) {
+        workers_.push_back(std::move(worker));
+    }
+    // Автоматическое удаление всех workers в деструкторе
+};
+```
+
+**ПЛОХО:**
+```cpp
+// Глобальные переменные с неясным временем жизни
+int* global_data = new int[1000]; // Когда удалять?
+
+// Смешивание автоматического и динамического управления
+void badFunction() {
+    int* data = new int[100];
+    std::vector<int> vec(data, data + 100); // Копирование
+    // Забыли delete[] data - утечка!
+}
+```
+
+#### Безопасность исключений
+
+**ХОРОШО:**
+```cpp
+class SafeResource {
+    std::unique_ptr<int[]> data_;
+    size_t size_;
+public:
+    SafeResource(size_t size) : size_(size) {
+        data_ = std::make_unique<int[]>(size);
+        // Если исключение выбросится здесь, data_ автоматически очистится
+        initializeData();
+    }
+    
+    // Строгая гарантия безопасности исключений
+    void resize(size_t new_size) {
+        auto new_data = std::make_unique<int[]>(new_size);
+        size_t copy_size = std::min(size_, new_size);
+        std::copy(data_.get(), data_.get() + copy_size, new_data.get());
+        
+        // Только если все прошло успешно, меняем состояние
+        data_ = std::move(new_data);
+        size_ = new_size;
+    }
+};
+```
+
+**ПЛОХО:**
+```cpp
+class UnsafeResource {
+    int* data_;
+    size_t size_;
+public:
+    UnsafeResource(size_t size) : size_(size) {
+        data_ = new int[size];
+        // Если здесь выбросится исключение, data_ не будет удален!
+        initializeData();
+    }
+    
+    // Небезопасная операция
+    void resize(size_t new_size) {
+        delete[] data_; // Удаляем старые данные
+        data_ = new int[new_size]; // Если здесь исключение - объект сломан!
+        size_ = new_size;
+    }
+};
+```
+
+#### Оптимизация работы с памятью
+
+**ХОРОШО:**
+```cpp
+// Предварительное резервирование памяти
+std::vector<int> data;
+data.reserve(expected_size);
+
+// Использование emplace вместо push_back
+std::vector<std::string> strings;
+strings.emplace_back("Hello"); // Конструируем на месте
+
+// Пулы памяти для частых аллокаций
+class MemoryPool {
+    std::vector<std::unique_ptr<char[]>> chunks_;
+    size_t chunk_size_;
+public:
+    void* allocate(size_t size) {
+        // Быстрое выделение из пула
+    }
+};
+```
+
+**ПЛОХО:**
+```cpp
+// Частые реаллокации
+std::vector<int> data;
+for (int i = 0; i < 1000000; ++i) {
+    data.push_back(i); // Много реаллокаций!
+}
+
+// Неэффективное копирование
+std::vector<std::string> strings;
+for (const auto& s : input) {
+    strings.push_back(std::string(s)); // Лишнее копирование
+}
+```
+
+### Современные возможности C++17 для работы с памятью
+
+#### std::optional и std::variant
+
+**ХОРОШО:**
+```cpp
+// Безопасная альтернатива указателям
+std::optional<int> findValue(const std::vector<int>& vec, int target) {
+    auto it = std::find(vec.begin(), vec.end(), target);
+    if (it != vec.end()) {
+        return *it;
+    }
+    return std::nullopt;
+}
+
+// Типобезопасный union
+std::variant<int, std::string, double> value;
+value = 42;
+if (std::holds_alternative<int>(value)) {
+    int i = std::get<int>(value);
+}
+```
+
+#### std::string_view
+
+**ХОРОШО:**
+```cpp
+// Избегаем копирование строк
+void processString(std::string_view sv) {
+    // Работаем с представлением строки без копирования
+    if (sv.starts_with("prefix")) {
+        // ...
+    }
+}
+
+std::string str = "Hello World";
+processString(str); // Без копирования
+processString("Literal"); // Без копирования
+```
+
+### Общие принципы работы с памятью
+
+1. **Принцип RAII**: Ресурсы должны захватываться при инициализации и освобождаться при разрушении
+2. **Предпочитайте автоматическое управление памятью**: Используйте контейнеры STL и умные указатели
+3. **Избегайте сырых указателей**: Используйте их только для не-владеющих ссылок
+4. **Проверяйте указатели**: Всегда проверяйте на nullptr перед использованием
+5. **Следуйте правилу трех/пяти**: Если определяете один из специальных методов, определите все необходимые
+6. **Обеспечивайте безопасность исключений**: Используйте RAII и copy-and-swap идиому
+7. **Оптимизируйте размещение данных**: Учитывайте выравнивание и cache locality
+8. **Используйте современные возможности C++**: optional, variant, string_view для безопасности
 
