@@ -615,3 +615,224 @@ int main() {
 В одно пространство имен следует объединять общие по смыслу классы и функции. Не стоит определять несколько пространств имен в одном файле, поскольку namespace —  по смыслу более крупное подразделение, чем файл. При этом несколько файлов могут составлять одно пространство имён.
 Будьте осторожны при использовании директивы using namespace: она может уничтожить все преимущества, которые дают пространства имён. Поэтому следует выбирать как можно более узкую область действия этой директивы. В h-файле неограниченный using namespace недопустим.
 
+Лучшие практики использования пространств имен (C++17 и ниже)
+
+ХОРОШО ✓
+
+1. Использование пространств имен в библиотеках:
+namespace mylib {
+    class Vector3D {
+        double x, y, z;
+    public:
+        Vector3D(double x, double y, double z) : x(x), y(y), z(z) {}
+        double magnitude() const;
+    };
+    
+    void normalize(Vector3D& v);
+}
+
+2. Использование вложенных пространств для деталей реализации:
+namespace graphics {
+    class Renderer {
+        // публичный API
+    };
+    
+    namespace detail {
+        // внутренние функции, не для внешнего использования
+        void optimizeShaders();
+        class InternalBuffer {};
+    }
+}
+
+3. Локальное использование using namespace в функциях:
+void processData() {
+    using namespace std::chrono;  // только в этой функции
+    auto start = steady_clock::now();
+    // ...
+}
+
+4. Использование using-деклараций для часто используемых типов:
+void mathFunction() {
+    using std::vector;
+    using std::string;
+    
+    vector<string> results;  // читается проще
+}
+
+5. Правильная структура namespace в header файлах:
+// math_utils.h
+#pragma once
+#include <vector>
+
+namespace math_utils {
+    double calculateMean(const std::vector<double>& data);
+    double calculateStdDev(const std::vector<double>& data);
+    
+    namespace statistics {
+        class Distribution {
+            // специализированные статистические функции
+        };
+    }
+}
+
+6. Использование anonymous namespace для internal linkage:
+// implementation.cpp
+namespace {
+    // эти функции видны только в этом файле
+    int helperFunction(int x) {
+        return x * 2;
+    }
+    
+    class InternalHelper {
+        // только для этого файла
+    };
+}
+
+namespace mylib {
+    void publicFunction() {
+        int result = helperFunction(5);  // можно использовать
+    }
+}
+
+7. Квалификация имен для избежания ADL проблем:
+namespace test {
+    struct Data {};
+    void process(const Data&) {}
+}
+
+void example() {
+    test::Data d;
+    test::process(d);  // явная квалификация безопаснее
+}
+
+8. Использование namespace alias для длинных имен:
+namespace fs = std::filesystem;  // C++17
+namespace chrono = std::chrono;
+
+void workWithFiles() {
+    fs::path p = "/some/path";
+    auto time = chrono::steady_clock::now();
+}
+
+ПЛОХО ✗
+
+1. using namespace в header файлах:
+// bad_header.h
+#include <vector>
+using namespace std;  // ПЛОХО! Загрязняет глобальное пространство
+
+class MyClass {
+    vector<int> data;  // может конфликтовать
+};
+
+2. Слишком глубокая вложенность пространств имен:
+namespace company {
+namespace project {
+namespace module {
+namespace submodule {
+namespace component {
+    class TooDeep {};  // company::project::module::submodule::component::TooDeep
+}
+}
+}
+}
+}
+
+3. Добавление в чужие пространства имен:
+// ПЛОХО! Не добавляйте в std
+namespace std {
+    void myFunction() {}  // нарушение стандарта
+}
+
+4. Множественные using namespace в одной области:
+void badFunction() {
+    using namespace std;
+    using namespace boost;
+    using namespace mylib;  // высокий риск конфликтов
+    
+    vector<int> v;  // какой vector?
+}
+
+5. Пространства имен из одного класса:
+namespace just_one_class {
+    class OnlyOne {
+        // если только один класс - namespace не нужен
+    };
+}
+
+6. Неинформативные имена пространств:
+namespace utils {  // слишком общее
+namespace helpers {  // не информативно
+namespace stuff {  // бессмысленное
+    class SomeClass {};
+}
+}
+}
+
+7. Квалификация внутри того же пространства:
+namespace myspace {
+    class A {};
+    
+    class B {
+        myspace::A a;  // избыточно, достаточно просто A
+    };
+}
+
+8. Забывание о ADL (Argument-Dependent Lookup):
+namespace test {
+    struct Point { int x, y; };
+}
+
+// где-то в другом месте
+namespace test {
+    void print(const Point& p) {  // может быть найдена через ADL
+        std::cout << p.x << ", " << p.y;
+    }
+}
+
+void example() {
+    test::Point p{1, 2};
+    print(p);  // найдет test::print через ADL - может быть неожиданно
+}
+
+Специфичные для C++11-C++17 практики:
+
+ХОРОШО ✓
+
+1. Использование auto с квалифицированными именами:
+auto timer = std::chrono::steady_clock::now();  // C++11+
+
+2. Range-based for с namespace alias:
+namespace rng = std::ranges;  // C++17 (если доступно)
+
+3. Inline namespaces для versioning:
+namespace mylib {
+    inline namespace v2 {  // C++11
+        class NewAPI {};
+    }
+    
+    namespace v1 {
+        class OldAPI {};
+    }
+}
+// mylib::NewAPI доступен как mylib::NewAPI
+
+ПЛОХО ✗
+
+1. Излишняя квалификация с auto:
+auto v1 = std::vector<std::string>{};  // избыточно
+auto v2 = std::vector<std::string>{"a", "b"};  // лучше
+auto v3 = std::vector{"a"s, "b"s};  // C++17 CTAD еще лучше
+
+2. Неиспользование structured bindings где уместно:
+// C++17 structured bindings
+auto [iter, success] = my_map.insert({key, value});
+
+Общие принципы:
+- Namespace должен отражать логическую группировку
+- Избегайте глубокой вложенности (более 3 уровней)
+- Предпочитайте краткие, но понятные имена
+- Всегда думайте о пользователях вашего API
+- Документируйте публичные пространства имен
+- Используйте detail/impl для внутренних компонентов
+

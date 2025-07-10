@@ -789,3 +789,243 @@ SUMMARY: UndefinedBehaviorSanitizer: SEGV (/home/jail/prog.exe+0x425b93)
 ==22==ABORTING
 Вот как заранее обнаружить и предотвратить неопределённое поведение.
 
+Лучшие практики работы с неопределенным поведением (C++17 и ниже)
+
+ХОРОШО ✓
+
+1. Использование безопасных методов доступа к контейнерам:
+// Безопасный доступ с проверкой границ
+std::vector<int> vec{1, 2, 3, 4, 5};
+try {
+    int value = vec.at(10);  // Выбросит исключение вместо UB
+} catch (const std::out_of_range& e) {
+    std::cout << "Error: " << e.what() << std::endl;
+}
+
+// Проверка размера перед доступом
+if (index < vec.size()) {
+    int value = vec[index];  // Безопасно
+}
+
+2. Правильная работа с указателями:
+// Проверка на nullptr перед использованием
+int* ptr = new(std::nothrow) int(42);
+if (ptr != nullptr) {
+    std::cout << *ptr << std::endl;
+    delete ptr;
+    ptr = nullptr;  // Обнуление после удаления
+}
+
+// Использование умных указателей
+auto smart_ptr = std::make_unique<int>(42);
+// Автоматическое управление памятью, нет риска двойного удаления
+
+3. Безопасная работа с целочисленными операциями:
+// Проверка переполнения для знаковых типов
+#include <limits>
+bool safe_add(int a, int b, int& result) {
+    if (a > 0 && b > std::numeric_limits<int>::max() - a) {
+        return false;  // Переполнение
+    }
+    if (a < 0 && b < std::numeric_limits<int>::min() - a) {
+        return false;  // Переполнение
+    }
+    result = a + b;
+    return true;
+}
+
+// Использование unsigned типов для арифметики по модулю
+unsigned int counter = 0;
+++counter;  // Переполнение определено стандартом
+
+4. Правильная работа с итераторами:
+std::vector<int> vec{1, 2, 3};
+// Сохранение конечного итератора перед модификацией
+auto end_it = vec.end();
+for (auto it = vec.begin(); it != end_it; ++it) {
+    // НЕ модифицируем vec здесь!
+    std::cout << *it << " ";
+}
+
+// Или используем индексы при модификации контейнера
+for (size_t i = 0; i < vec.size(); ++i) {
+    vec.push_back(vec[i] * 2);  // Безопасно с индексами
+}
+
+5. Использование современных C++ альтернатив:
+// std::array вместо C-массивов
+std::array<int, 5> arr{1, 2, 3, 4, 5};
+// Размер известен на этапе компиляции
+
+// Алгоритмы STL вместо ручных циклов
+auto it = std::find(arr.begin(), arr.end(), 3);
+if (it != arr.end()) {
+    // Элемент найден
+}
+
+6. Правильная многопоточность:
+std::mutex mtx;
+int shared_value = 0;
+
+void thread_function() {
+    std::lock_guard<std::mutex> lock(mtx);
+    ++shared_value;  // Безопасный доступ
+}
+
+// Использование atomic для простых операций
+std::atomic<int> atomic_counter{0};
+++atomic_counter;  // Безопасно без мьютекса
+
+7. Использование инструментов статического анализа:
+// .clang-tidy файл с проверками UB
+/*
+Checks: '*,-llvm-*,-llvmlibc-*,
+         bugprone-*,
+         clang-analyzer-*,
+         cppcoreguidelines-*'
+*/
+
+8. Включение санитайзеров при разработке:
+// Компиляция с UBSan
+// g++ -fsanitize=undefined -fsanitize=address program.cpp
+
+// Отладочные режимы STL
+// g++ -D_GLIBCXX_DEBUG program.cpp
+
+ПЛОХО ✗
+
+1. Небезопасный доступ к контейнерам:
+std::vector<int> vec{1, 2, 3};
+int value = vec[100];  // UB: выход за границы без проверки
+
+// Доступ к пустому контейнеру
+std::vector<int> empty_vec;
+int first = empty_vec[0];  // UB
+
+2. Неправильная работа с указателями:
+int* ptr = new int(42);
+delete ptr;
+delete ptr;  // UB: двойное удаление
+
+*ptr = 100;  // UB: использование после удаления
+
+// Разыменование нулевого указателя
+int* null_ptr = nullptr;
+int value = *null_ptr;  // UB
+
+3. Небезопасные операции с массивами:
+int arr[5] = {1, 2, 3, 4, 5};
+int value = arr[10];  // UB: выход за границы
+
+// Неправильное использование указательной арифметики
+int* ptr = arr;
+ptr += 100;
+int value2 = *ptr;  // UB
+
+4. Игнорирование переполнения знаковых типов:
+int max_val = std::numeric_limits<int>::max();
+int overflow = max_val + 1;  // UB: переполнение знакового типа
+
+// Опасное сравнение после потенциального переполнения
+bool check_increment(int n) {
+    return n < n + 1;  // UB при n = INT_MAX
+}
+
+5. Модификация контейнера во время итерации:
+std::vector<int> vec{1, 2, 3, 4, 5};
+for (const auto& elem : vec) {
+    vec.push_back(elem * 2);  // UB: инвалидация итераторов
+}
+
+// Удаление элементов в range-based for
+for (auto it = vec.begin(); it != vec.end(); ++it) {
+    if (*it > 3) {
+        vec.erase(it);  // UB: использование инвалидированного итератора
+    }
+}
+
+6. Небезопасная многопоточность:
+int global_counter = 0;
+
+void thread1() {
+    ++global_counter;  // UB: гонка данных
+}
+
+void thread2() {
+    ++global_counter;  // UB: гонка данных
+}
+
+7. Игнорирование lifetime объектов:
+int& get_reference() {
+    int local_var = 42;
+    return local_var;  // UB: возврат ссылки на локальную переменную
+}
+
+std::string_view get_string_view() {
+    std::string temp = "Hello";
+    return temp;  // UB: string_view указывает на временный объект
+}
+
+8. Неправильное использование union:
+union Data {
+    int i;
+    float f;
+};
+
+Data data;
+data.i = 42;
+float f = data.f;  // UB: чтение неактивного члена union
+
+9. Нарушение строгого алиасинга:
+int i = 42;
+float* f_ptr = reinterpret_cast<float*>(&i);
+float f = *f_ptr;  // UB: нарушение strict aliasing
+
+10. Неопределенная последовательность вычислений:
+int i = 1;
+int result = ++i + i++;  // UB: неопределенная последовательность
+
+// Модификация и чтение в одном выражении
+int arr[10];
+int idx = 0;
+arr[idx++] = idx;  // UB: неопределенная последовательность
+
+Специфичные для C++11-C++17 практики:
+
+ХОРОШО ✓
+
+1. Использование list initialization:
+std::vector<int> vec{1, 2, 3, 4, 5};  // Явная инициализация
+
+2. Auto с осторожностью:
+auto ptr = std::make_unique<int>(42);  // Ясно что это unique_ptr
+// Избегайте auto для арифметических операций где важен тип
+
+3. Правильное использование move семантики:
+std::vector<std::string> vec;
+std::string str = "Hello";
+vec.push_back(std::move(str));  // str может быть в moved-from состоянии
+// НЕ используйте str после move без переприсваивания
+
+ПЛОХО ✗
+
+1. Использование moved-from объектов:
+std::string str = "Hello";
+std::string moved_str = std::move(str);
+std::cout << str << std::endl;  // UB: использование moved-from объекта
+
+2. Неправильное использование auto:
+auto result = unsigned_value - 1;  // Может быть неожиданное переполнение
+
+Общие принципы предотвращения UB:
+- Всегда проверяйте границы массивов и контейнеров
+- Используйте умные указатели вместо сырых
+- Проверяйте указатели на nullptr перед использованием
+- Не модифицируйте контейнеры во время итерации по ним
+- Используйте синхронизацию в многопоточном коде
+- Включайте максимальные предупреждения компилятора (-Wall -Wextra -Wpedantic)
+- Используйте санитайзеры в debug сборках
+- Регулярно применяйте статический анализ кода
+- Следуйте современным практикам C++ (RAII, STL алгоритмы, умные указатели)
+- Тестируйте код на разных компиляторах и с разными уровнями оптимизации
+

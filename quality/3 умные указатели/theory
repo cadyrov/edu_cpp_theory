@@ -1088,3 +1088,189 @@ The apartment is empty
 The apartment has been destroyed
 Решение проблемы висячих ссылок — не единственное применение указателя weak_ptr. Он умеет отслеживать, жив ли некоторый объект, а ещё может получать доступ к нему. Этим способностям можно найти много разных применений. В следующем задании вам предстоит разработать простой кэш объектов, который будет возвращать существующий объект из кэша или, при его отсутствии, создавать новый.
 
+# Лучшие практики использования умных указателей в C++17
+
+## ✅ Хорошие практики
+
+### unique_ptr
+- **Используй make_unique вместо new**
+```cpp
+// Хорошо
+auto ptr = std::make_unique<Object>(args);
+
+// Плохо
+std::unique_ptr<Object> ptr(new Object(args));
+```
+
+- **Возвращай unique_ptr из factory функций**
+```cpp
+// Хорошо
+std::unique_ptr<Shape> CreateShape(ShapeType type) {
+    return std::make_unique<Rectangle>();
+}
+
+// Плохо
+Shape* CreateShape(ShapeType type) {
+    return new Rectangle(); // Кто отвечает за удаление?
+}
+```
+
+- **Передавай unique_ptr по rvalue-ссылке для передачи владения**
+```cpp
+// Хорошо
+void ProcessObject(std::unique_ptr<Object> obj) { /* владение передано */ }
+
+// Плохо  
+void ProcessObject(std::unique_ptr<Object>& obj) { /* не ясно кто владеет */ }
+```
+
+### shared_ptr
+- **Избегай создания shared_ptr из сырого указателя**
+```cpp
+// Хорошо
+auto ptr = std::make_shared<Object>(args);
+
+// Плохо
+Object* raw = new Object(args);
+std::shared_ptr<Object> ptr1(raw);
+std::shared_ptr<Object> ptr2(raw); // Двойное удаление!
+```
+
+- **Используй enable_shared_from_this для получения shared_ptr на this**
+```cpp
+// Хорошо
+class Widget : public std::enable_shared_from_this<Widget> {
+public:
+    void DoAsync() {
+        auto self = shared_from_this();
+        // async operation with self
+    }
+};
+
+// Плохо
+class Widget {
+public:
+    void DoAsync() {
+        std::shared_ptr<Widget> self(this); // Опасно!
+    }
+};
+```
+
+### weak_ptr
+- **Всегда проверяй результат lock() перед использованием**
+```cpp
+// Хорошо
+if (auto locked = weak_ptr.lock()) {
+    locked->DoSomething();
+}
+
+// Плохо
+auto locked = weak_ptr.lock();
+locked->DoSomething(); // Может быть nullptr!
+```
+
+- **Используй weak_ptr для разрыва циклических ссылок**
+```cpp
+// Хорошо
+class Parent {
+    std::vector<std::shared_ptr<Child>> children;
+};
+class Child {
+    std::weak_ptr<Parent> parent; // Слабая ссылка
+};
+
+// Плохо
+class Parent {
+    std::vector<std::shared_ptr<Child>> children;
+};
+class Child {
+    std::shared_ptr<Parent> parent; // Циклическая ссылка!
+};
+```
+
+## ❌ Плохие практики
+
+### Общие ошибки
+- **Не смешивай умные и сырые указатели**
+```cpp
+// Плохо
+auto smart = std::make_unique<Object>();
+Object* raw = smart.get();
+delete raw; // Двойное удаление!
+```
+
+- **Не используй auto_ptr (устарел в C++11, удален в C++17)**
+```cpp
+// Плохо - auto_ptr удален в C++17
+std::auto_ptr<Object> ptr(new Object);
+```
+
+- **Не создавай temporary shared_ptr для передачи в функцию**
+```cpp
+// Плохо
+void Process(const Object& obj);
+Process(*std::make_shared<Object>()); // Ненужные накладные расходы
+```
+
+### Производительность
+- **Избегай лишних копирований shared_ptr**
+```cpp
+// Хорошо
+void Process(const std::shared_ptr<Object>& ptr);
+
+// Плохо
+void Process(std::shared_ptr<Object> ptr); // Ненужное копирование
+```
+
+- **Не используй shared_ptr когда достаточно unique_ptr**
+```cpp
+// Хорошо
+std::unique_ptr<Object> CreateObject() {
+    return std::make_unique<Object>();
+}
+
+// Плохо
+std::shared_ptr<Object> CreateObject() {
+    return std::make_shared<Object>(); // Ненужные накладные расходы
+}
+```
+
+### Безопасность
+- **Не храни weak_ptr слишком долго без проверки**
+```cpp
+// Плохо
+class Cache {
+    std::weak_ptr<Object> cached_obj;
+public:
+    Object& GetObject() {
+        return *cached_obj.lock(); // Может вернуть nullptr!
+    }
+};
+```
+
+- **Не передавай this в конструкторе через shared_ptr**
+```cpp
+// Плохо
+class Widget : public std::enable_shared_from_this<Widget> {
+public:
+    Widget() {
+        auto self = shared_from_this(); // UB! Объект еще не создан
+    }
+};
+```
+
+## Рекомендации по выбору умного указателя
+
+1. **По умолчанию используй unique_ptr** - самый эффективный
+2. **shared_ptr только при необходимости совместного владения**
+3. **weak_ptr для разрыва циклов и наблюдения за объектами**
+4. **Сырые указатели только для не-владеющих ссылок**
+
+## Идиома RAII и умные указатели
+
+Умные указатели - основа идиомы RAII (Resource Acquisition Is Initialization):
+- Ресурс захватывается в конструкторе
+- Автоматически освобождается в деструкторе
+- Исключения безопасны
+- Нет ручного управления памятью
+
