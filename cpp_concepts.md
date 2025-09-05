@@ -1356,3 +1356,263 @@ public:
 - Фиксированные типы гарантируют размер на всех платформах
 - Выравнивание влияет на производительность
 - Packed структуры могут замедлить доступ к данным
+
+### Structured Bindings
+Механизм для удобной деструктуризации составных типов (tuple, pair, array, struct).
+
+#### Основные концепции
+```cpp
+// Базовое использование
+auto [x, y] = std::pair{1, 2};
+const auto& [first, second] = map.find(key);
+
+// С пользовательским типом
+struct Point { int x, y; };
+const auto [px, py] = Point{10, 20};
+
+// В range-based for
+for (const auto& [key, value] : myMap) {
+    std::cout << key << ": " << value << '\n';
+}
+```
+
+#### Важные моменты
+- Все переменные должны быть использованы
+- Имена должны быть уникальными
+- Порядок привязки фиксирован
+- Работает с constexpr
+- Поддерживает move семантику
+
+### if/switch с инициализацией
+Механизм для локализации области видимости переменных в условных конструкциях.
+
+#### Синтаксис и примеры
+```cpp
+// if с инициализацией
+if (auto ptr = createResource(); ptr != nullptr) {
+    ptr->process();
+}  // ptr уничтожается здесь
+
+// switch с инициализацией
+switch (auto value = getValue(); value) {
+    case 1: /* ... */ break;
+    case 2: /* ... */ break;
+}  // value уничтожается здесь
+
+// Проверка с RAII
+if (std::lock_guard lock(mutex); needsUpdate) {
+    performUpdate();
+}  // автоматическая разблокировка
+```
+
+#### Важные моменты
+- Переменная доступна во всех ветках
+- Поддерживает все виды инициализации
+- Работает с составными условиями
+- Улучшает инкапсуляцию
+
+### Fold Expressions
+Механизм для компактной работы с parameter packs в шаблонах.
+
+#### Синтаксис и примеры
+```cpp
+// Унарный fold
+template<typename... Args>
+bool all(Args... args) {
+    return (... && args);  // (a1 && a2 && a3)
+}
+
+// Бинарный fold с инициализатором
+template<typename... Args>
+int sum(Args... args) {
+    return (args + ... + 0);  // (a1 + a2 + ... + 0)
+}
+
+// Вызов методов
+template<typename... Types>
+void process(Types... items) {
+    (items.update(), ...);  // последовательный вызов update()
+}
+```
+
+#### Важные моменты
+- Пустой pack разрешён
+- Порядок вычисления слева направо
+- Поддержка всех операторов
+- Возможность вложенных выражений
+
+### Inline Variables
+Механизм для определения глобальных переменных в заголовочных файлах.
+
+#### Синтаксис и примеры
+```cpp
+// В заголовочном файле
+inline constexpr int MaxSize = 100;
+
+class Widget {
+    static inline int count = 0;  // определение в классе
+    inline static const std::string name = "Widget";
+};
+
+// Синглтон
+class Singleton {
+public:
+    static Singleton& instance() {
+        static inline Singleton instance;
+        return instance;
+    }
+};
+```
+
+#### Важные моменты
+- Одна копия на программу
+- Thread-safe инициализация
+- Поддержка RAII
+- Совместимость с constexpr
+
+### Deduction Guides
+Механизм для вывода типов шаблонных классов.
+
+#### Синтаксис и примеры
+```cpp
+// Базовый класс
+template<typename T>
+class Container {
+    T value;
+public:
+    Container(T v) : value(v) {}
+};
+
+// Deduction guide
+Container(const char*) -> Container<std::string>;
+
+// Использование
+Container c1(42);     // Container<int>
+Container c2("text"); // Container<std::string>
+
+// Для агрегатов
+template<typename T, typename U>
+struct Pair { T first; U second; };
+
+template<typename T, typename U>
+Pair(T, U) -> Pair<T, U>;
+```
+
+#### Важные моменты
+- Работает с конструкторами
+- Поддерживает агрегаты
+- Возможность explicit
+- Приоритет над auto
+
+### Атрибуты
+Механизм для передачи дополнительной информации компилятору.
+
+#### Синтаксис и примеры
+```cpp
+// nodiscard
+[[nodiscard]] int getValue() { return 42; }
+
+// maybe_unused
+void process([[maybe_unused]] int debug_level) {
+    #ifdef DEBUG
+        // использование debug_level
+    #endif
+}
+
+// fallthrough
+switch (value) {
+    case 1:
+        doSomething();
+        [[fallthrough]];
+    case 2:
+        doMore();
+        break;
+}
+
+// Пользовательские атрибуты
+namespace my {
+    struct timeout {
+        constexpr timeout(int ms) : value(ms) {}
+        int value;
+    };
+}
+
+[[my::timeout(1000)]]
+void networkOperation() {
+    // ...
+}
+```
+
+#### Важные моменты
+- Игнорирование неизвестных атрибутов
+- Поддержка namespaces
+- Возможность параметризации
+- Совместимость между компиляторами
+
+### Aggregate Initialization
+Расширенные возможности инициализации агрегатов.
+
+#### Синтаксис и примеры
+```cpp
+// Базовая структура
+struct Point {
+    int x, y;
+    struct Color {
+        int r, g, b;
+    } color;
+};
+
+// Designated initialization
+Point p1{.x = 1, .y = 2, .color = {.r = 255}};
+
+// Вложенная инициализация
+Point p2{{1, 2}, {255, 128, 0}};
+
+// Правила и ограничения
+struct S {
+    int a, b, c;
+};
+
+S s1{.a = 1, .b = 2};     // OK
+S s2{.b = 2, .a = 1};     // Error: неправильный порядок
+```
+
+#### Важные моменты
+- Только публичные поля
+- Фиксированный порядок
+- Поддержка наследования
+- Совместимость с constexpr
+
+### Concepts
+Механизм для задания требований к шаблонным параметрам.
+
+#### Синтаксис и примеры
+```cpp
+// Определение концепта
+template<typename T>
+concept Numeric = std::is_arithmetic_v<T>;
+
+// Использование
+template<Numeric T>
+T add(T a, T b) {
+    return a + b;
+}
+
+// Составные концепты
+template<typename T>
+concept Printable = requires(T x) {
+    { std::cout << x } -> std::same_as<std::ostream&>;
+};
+
+template<typename T>
+concept Sortable = requires(T x) {
+    { x < x } -> std::convertible_to<bool>;
+    { x > x } -> std::convertible_to<bool>;
+};
+```
+
+#### Важные моменты
+- Улучшенные сообщения об ошибках
+- Замена SFINAE
+- Поддержка композиции
+- Интеграция с auto
