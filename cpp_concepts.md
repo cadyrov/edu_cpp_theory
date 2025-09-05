@@ -1205,3 +1205,154 @@ public:
     }
 };
 ```
+
+### Битовые поля и упаковка данных
+Механизмы для эффективного хранения и управления данными на уровне битов.
+
+#### Битовые поля
+1. **Базовый синтаксис**:
+   ```cpp
+   struct Flags {
+       uint32_t read    : 1;  // 1 бит
+       uint32_t write   : 1;  // 1 бит
+       uint32_t execute : 1;  // 1 бит
+       uint32_t unused  : 29; // остальные биты
+   };
+   ```
+
+2. **Применение с enum**:
+   ```cpp
+   enum class Color : uint8_t {
+       Red, Green, Blue
+   };
+
+   struct Pixel {
+       uint32_t alpha : 8;    // прозрачность
+       Color    color : 2;    // цвет (нужно 2 бита для 3 значений)
+       uint32_t bright : 3;   // яркость
+   };
+   ```
+
+#### Выравнивание и упаковка
+1. **Контроль выравнивания**:
+   ```cpp
+   // Принудительное выравнивание
+   struct alignas(8) AlignedStruct {
+       char c;     // 1 байт
+       int32_t i;  // 4 байта
+   };  // размер 8 байт
+
+   // Упаковка без выравнивания
+   #pragma pack(push, 1)
+   struct PackedStruct {
+       char c;     // 1 байт
+       int32_t i;  // 4 байта
+   };  // размер 5 байт
+   #pragma pack(pop)
+   ```
+
+2. **Атрибуты упаковки**:
+   ```cpp
+   struct [[gnu::packed]] PackedGNU {
+       char c;
+       int32_t i;
+   };
+   ```
+
+#### Фиксированные типы
+1. **Целочисленные типы**:
+   ```cpp
+   #include <cstdint>
+   
+   uint8_t  byte;    // ровно 8 бит без знака
+   int16_t  short;   // ровно 16 бит со знаком
+   uint32_t uint;    // ровно 32 бита без знака
+   int64_t  long;    // ровно 64 бита со знаком
+   
+   // Минимальные типы
+   int_least8_t  min8;   // минимум 8 бит
+   uint_least16_t min16; // минимум 16 бит
+   
+   // Быстрые типы
+   int_fast32_t  fast32;  // оптимальный >= 32 бит
+   uint_fast64_t fast64;  // оптимальный >= 64 бит
+   ```
+
+2. **Специальные типы**:
+   ```cpp
+   intptr_t  ptr;      // для хранения указателя
+   uintmax_t biggest;  // максимально возможный
+   ```
+
+#### Оптимизация размера
+1. **Порядок полей**:
+   ```cpp
+   // Плохо: много паддинга
+   struct BadLayout {
+       char a;      // 1 байт + 3 паддинг
+       int32_t b;   // 4 байта
+       char c;      // 1 байт + 3 паддинг
+   };  // всего 12 байт
+
+   // Хорошо: минимум паддинга
+   struct GoodLayout {
+       int32_t b;   // 4 байта
+       char a;      // 1 байт
+       char c;      // 1 байт + 2 паддинг
+   };  // всего 8 байт
+   ```
+
+2. **Использование union**:
+   ```cpp
+   union DataUnion {
+       struct {
+           uint32_t flag1 : 1;
+           uint32_t flag2 : 1;
+       } flags;
+       uint32_t raw;  // прямой доступ ко всем битам
+   };
+   ```
+
+#### Работа с битовыми полями
+1. **Операции**:
+   ```cpp
+   struct Control {
+       uint16_t enabled : 1;
+       uint16_t ready   : 1;
+       uint16_t mode    : 2;
+   };
+
+   Control ctrl{};
+   ctrl.enabled = true;
+   ctrl.mode = 2;
+   
+   // Атомарные операции
+   std::atomic<Control> atomic_ctrl;
+   Control old = atomic_ctrl.load(std::memory_order_relaxed);
+   ```
+
+2. **Битовые маски**:
+   ```cpp
+   struct Permissions {
+       static constexpr uint32_t Read    = 0b001;
+       static constexpr uint32_t Write   = 0b010;
+       static constexpr uint32_t Execute = 0b100;
+       
+       uint32_t flags : 3;
+       
+       bool canRead() const { return flags & Read; }
+       void setWrite(bool enable) {
+           flags = enable ? (flags | Write) : (flags & ~Write);
+       }
+   };
+   ```
+
+#### Важные моменты
+- Порядок битов зависит от платформы
+- Битовые поля не имеют адреса
+- Возможны проблемы с выравниванием при packed структурах
+- Атомарные операции могут быть медленнее для packed структур
+- Размер структуры может быть больше суммы размеров полей
+- Фиксированные типы гарантируют размер на всех платформах
+- Выравнивание влияет на производительность
+- Packed структуры могут замедлить доступ к данным
