@@ -22,7 +22,12 @@
 - Размещение объектов
 - Базовые приёмы
 
-### 2.2 [RAII](q_concepts/05_raii.md)
+### 2.2 [Uninitialized Memory](q_concepts/04_uninitialized_memory.md)
+- std::uninitialized_*
+- Оптимизация инициализации
+- Placement new и POD типы
+
+### 2.3 [RAII](q_concepts/05_raii.md)
 - Автоматическое управление ресурсами
 - Защита от утечек
 - Основа современного C++
