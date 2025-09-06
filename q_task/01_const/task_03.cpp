@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <utility>
 
 // Task 3: Константные итераторы
 // 
@@ -13,10 +14,10 @@ class ReadOnlyVector {
     std::vector<std::string> data_;
 
 public:
-    using const_iterator  std::vector<std::string>::const_iterator;
+    using const_iterator = std::vector<std::string>::const_iterator;
     // TODO: Реализуйте:
     // 1. Конструктор из vector<string>
-    ReadOnlyVector(std::vector<std::string> data):data_(data) {}
+    ReadOnlyVector(std::vector<std::string> data):data_(std::move(data)) {}
 
     //  // 2. begin() и end(), возвращающие константные итераторы
     const_iterator begin() const{
