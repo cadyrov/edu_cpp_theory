@@ -1,6 +1,9 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <utility>
+#include <algorithm>
+#include <iostream>
 
 // Task 5: Логическая константность
 // 
@@ -18,10 +21,36 @@ class LazyString {
 public:
     // TODO: Реализуйте:
     // 1. Конструктор из string
+    LazyString(std::string original):original_(std::move(original)) {
+
+    }
+
     // 2. Метод получения оригинальной строки (не константный)
+    std::string& get(){
+        cache_valid_ = false;
+        return original_;
+    }
     // 3. Метод получения UPPERCASE версии (константный)
+    const std::string& getUpperCase() const{
+        if (!cache_valid_) {
+            uppercase_cache_ = original_;
+            std::transform(uppercase_cache_.begin(), uppercase_cache_.end(), uppercase_cache_.begin(),
+                    [](char c){return std::toupper(c);});
+
+            cache_valid_ = true;
+        }
+        return uppercase_cache_;
+    }
+
     // 4. Метод изменения строки (сбрасывает кеш)
+    void set(std::string original) {
+        cache_valid_ = false;
+        original_ = std::move(original);
+    }
     // 5. Метод size() (константный)
+    size_t size() const {
+        return original_.size();
+    }
 };
 
 // Код для проверки
@@ -46,3 +75,7 @@ void testLazyString() {
     // str.getUpperCase() = "TEST";    // Нельзя модифицировать результат uppercase
 }
 
+int main() {
+    testLazyString();
+    return 0;
+}
