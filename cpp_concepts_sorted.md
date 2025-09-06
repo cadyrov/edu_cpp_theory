@@ -32,7 +32,7 @@
 - Защита от утечек
 - Основа современного C++
 
-### 2.3 [Smart Pointers](q_concepts/06_smart_pointers.md)
+### 2.4 [Smart Pointers](q_concepts/06_smart_pointers.md)
 - Практическое применение RAII
 - Простые случаи использования
 - Базовая работа с unique_ptr
