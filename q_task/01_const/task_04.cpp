@@ -1,52 +1,48 @@
 #include <string>
-#include <map>
+#include <vector>
 #include <memory>
 
-// Task 4: Константные умные указатели
+// Task 5: Логическая константность
 // 
-// Реализуйте класс Registry, который:
-// 1. Хранит shared_ptr на объекты с их именами
-// 2. Позволяет получать константные shared_ptr на объекты
-// 3. Предотвращает модификацию объектов через полученные указатели
-// 4. Разрешает модификацию только через специальные методы
+// Реализуйте класс LazyString, который:
+// 1. Хранит строку в разных представлениях (normal и uppercase)
+// 2. Ленивое преобразование в uppercase при первом запросе
+// 3. Кеширование результата для последующих запросов
+// 4. Поддержка константной корректности
 
-class Object {
-    int value_;
-public:
-    Object(int v) : value_(v) {}
-    void setValue(int v) { value_ = v; }
-    int getValue() const { return value_; }
-};
-
-class Registry {
-    std::map<std::string, std::shared_ptr<Object>> objects_;
+class LazyString {
+    std::string original_;
+    mutable std::string uppercase_cache_;
+    mutable bool cache_valid_ = false;
 
 public:
     // TODO: Реализуйте:
-    // 1. Метод регистрации объекта (register/add)
-    // 2. Метод получения константного указателя на объект
-    // 3. Метод модификации объекта по имени
-    // 4. Метод проверки существования объекта
+    // 1. Конструктор из string
+    // 2. Метод получения оригинальной строки (не константный)
+    // 3. Метод получения UPPERCASE версии (константный)
+    // 4. Метод изменения строки (сбрасывает кеш)
+    // 5. Метод size() (константный)
 };
 
 // Код для проверки
-void testRegistry() {
-    Registry registry;
+void testLazyString() {
+    LazyString str("Hello, World!");
     
-    // Регистрация объектов
-    registry.add("obj1", std::make_shared<Object>(42));
-    registry.add("obj2", std::make_shared<Object>(123));
+    // Проверка базовой функциональности
+    std::cout << "Original: " << str.get() << "\n";
+    std::cout << "Upper: " << str.getUpperCase() << "\n";
     
-    // Получение и использование объектов
-    auto obj1 = registry.get("obj1");
-    std::cout << "obj1 value: " << obj1->getValue() << "\n";
+    // Проверка константности
+    const LazyString const_str("Test String");
+    std::cout << "Const Upper: " << const_str.getUpperCase() << "\n";
     
-    // Модификация через специальный метод
-    registry.modify("obj1", 100);
-    std::cout << "obj1 new value: " << obj1->getValue() << "\n";
+    // Проверка изменения и сброса кеша
+    str.set("New String");
+    std::cout << "New Upper: " << str.getUpperCase() << "\n";
     
     // Эти строки НЕ должны компилироваться:
-    // obj1->setValue(200);              // Нельзя модифицировать через полученный указатель
-    // registry.get("obj1")->setValue(200); // Нельзя модифицировать через результат get()
+    // const_str.set("test");          // Нельзя модифицировать const объект
+    // const_str.get() = "test";       // Нельзя модифицировать через результат
+    // str.getUpperCase() = "TEST";    // Нельзя модифицировать результат uppercase
 }
 
