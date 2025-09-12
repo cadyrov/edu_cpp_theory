@@ -44,8 +44,17 @@ public:
     
     // TODO: Реализуйте:
     // 1. Метод print() который можно вызвать для константных объектов
+    void print() const {
+        legacy_print(const_cast<Data*>(&data_));
+    }
     // 2. Метод modify() который нельзя вызвать для константных объектов
+    void modify(const char* new_text) {
+        legacy_modify(&data_, new_text);
+    }
     // 3. Метод get_length() который можно вызвать для константных объектов
+    int get_length() const {
+        return data_.length;
+    }
     // 4. Корректную работу с legacy API, используя const_cast только где действительно необходимо
 };
 

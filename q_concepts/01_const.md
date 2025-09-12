@@ -84,7 +84,26 @@ public:
 ### 2. const_cast
 - Избегай использования `const_cast`
 - Применяй только когда работаешь с legacy API
-- Использование `const_cast` для модификации const объекта = UB
+- const_cast не меняет сами данные, он только отключает проверки компилятора. Если ты реально попытаешься изменить константные данные через const_cast - это UB (undefined behavior).
+
+- const -> non-const: безопасно ТОЛЬКО если исходный объект не был изначально const.
+```cpp
+    int x = 5;
+    const int* px = &x;
+    int* y = const_cast<int*>(px); // ок, x не был const изначально
+    *y = 10; // работает норм
+```
+- const -> non-const с изначально const объектом: UB!
+```cpp
+    const int x = 5;
+    int* y = const_cast<int*>(&x); // компилируется
+    *y = 10; // UB! потому что x реально const
+```
+- non-const -> const: всегда безопасно
+```cpp
+    int x = 5;
+    const int* y = const_cast<const int*>(&x); // ок всегда
+```
 
 ### 3. Возвращаемые значения
 - Возвращай const для указателей/ссылок на внутренние данные
