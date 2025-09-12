@@ -19,13 +19,13 @@ public:
 // TODO: Реализуйте функции, которые демонстрируют различные случаи использования константных указателей:
 
 // 1. Функция, принимающая указатель на константные данные (нельзя менять *ptr)
-void printSettings(/* TODO */);
+void printSettings(const Settings * in) {}
 
 // 2. Функция, принимающая константный указатель (нельзя менять ptr)
-void rememberSettings(/* TODO */);
+void rememberSettings(Settings* constin){}
 
 // 3. Функция, принимающая константный указатель на константные данные (нельзя менять ни ptr, ни *ptr)
-void archiveSettings(/* TODO */);
+void archiveSettings(const Settings* const in);
 
 // Код для проверки
 void testConstPointers() {

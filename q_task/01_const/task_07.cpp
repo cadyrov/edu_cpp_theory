@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <utility>
 
 // Task 7: Константные параметры функций
 // 
@@ -21,22 +22,36 @@ struct UserData {
 // 1. Функция для подсчета среднего балла
 // - Не должна модифицировать данные
 // - Должна быть эффективной
-double calculateAverage(/* TODO */);
+double calculateAverage(const UserData& user){
+    int result =0;
+
+    for (const auto x : user.scores) {
+        result += x;
+    }
+
+    return static_cast<double>(result)/user.scores.size();
+}
 
 // 2. Функция для обновления имени
 // - Должна модифицировать имя
 // - Должна быть эффективной при передаче нового имени
-void updateName(/* TODO */);
+void updateName(UserData& ud, std::string name) {
+    ud.name = std::move(name);
+}
 
 // 3. Функция для добавления нового счета
 // - Должна модифицировать список счетов
 // - Не должна позволять модифицировать существующие счета
-void addScore(/* TODO */);
+void addScore(UserData& ud, int score) {
+    ud.scores.push_back(score);
+}
 
 // 4. Функция для проверки валидности данных
 // - Не должна модифицировать данные
 // - Должна быть максимально эффективной
-bool isValid(/* TODO */);
+bool isValid(const UserData& ud) {
+    return ud.name.empty() == false && ud.scores.empty() == false;
+}
 
 // Код для проверки
 void testConstParameters() {
