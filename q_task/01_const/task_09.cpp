@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <utility>
 
 // Task 9: Копирование константных объектов
 // 
@@ -21,25 +22,52 @@ public:
     // TODO: Реализуйте:
     
     // 1. Конструктор копирования
+    Document(const Document& in):title_(in.title_), content_(in.content_), access_count_(in.access_count_) {}
     // - Должен работать с константными объектами
     // - Должен корректно копировать все поля
     // - Должен обеспечивать strong exception guarantee
     
     // 2. Оператор присваивания копированием
+    Document& operator =(const Document& in){
+        if (this == &in) {
+            return *this;
+        }
+        
+        Document cp(in);
+        std::swap(cp, *this);
+
+        return *this;
+    }
     // - Должен работать с константными объектами
     // - Должен быть защищен от самоприсваивания
     // - Должен обеспечивать strong exception guarantee
     
     // 3. Конструктор перемещения
+    Document(Document&& in):
+        title_(std::move(in.title_)),
+        content_(std::move(in.content_)),
+        access_count_(in.access_count_){}
     // - Должен работать только с неконстантными объектами
     // - Должен корректно перемещать ресурсы
     // - Должен оставлять источник в валидном состоянии
     
     // 4. Оператор присваивания перемещением
+    Document& operator =(Document&& in) {
+        if (this == &in) {
+            return *this;
+        }
+        Document cp(std::move(in));
+
+        std::swap(cp, *this);
+
+        return *this;
+    }
     // - Должен работать только с неконстантными объектами
     // - Должен быть защищен от самоприсваивания
     // - Должен корректно перемещать ресурсы
     
+    ~Document() = default;
+
     // Вспомогательные методы
     void addLine(const std::string& line) { content_.push_back(line); }
     const std::string& getTitle() const { return title_; }

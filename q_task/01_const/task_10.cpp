@@ -27,14 +27,21 @@ private:
 public:
     // Реализуйте этот метод
     int calculate(int input) const {
+        auto it = cache_.find(input);
+        if (it != cache_.end()){
+            return it->second;
+        }
+
+        cache_[input] = performCalculation(input);
+
         // TODO: Используйте кэш, если результат уже был вычислен
         // В противном случае выполните вычисление и сохраните в кэш
-        return 0; // Заглушка
+        return cache_[input]; // Заглушка
     }
 
     // Бонусное задание: реализуйте метод для очистки кэша
     void clearCache() {
-        // TODO: Очистите кэш
+        cache_.clear();
     }
 };
 
