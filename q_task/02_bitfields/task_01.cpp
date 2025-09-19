@@ -1,19 +1,36 @@
 #include <iostream>
+#include <string>
 
 // Task 1: Базовое использование битовых полей
 // 
 // Создайте структуру Flags, которая:
-// 1. Использует всего 1 байт памяти
+// 1. Использует всего 1 байт памяти (проверить через static_assert)
 // 2. Содержит 4 булевых флага: active, ready, valid, error
-// 3. Реализуйте метод printFlags() для вывода состояния флагов
+// 3. Реализуйте метод print(std::ostream& out), который выводит состояние флагов:
+//    active: false
+//    ready: true
+//    valid: false
+//    error: true
 //
-// Примечание: используйте static_assert для проверки размера структуры
+// Проверки:
+// - Размер структуры 1 байт (static_assert)
+// - Корректность начального состояния (все false)
+// - Установка и проверка отдельных флагов
+// - Корректность вывода
 
 struct Flags {
-    // TODO: реализуйте структуру
+    bool active:1;
+    bool ready:1;
+    bool valid:1;
+    bool error:1;
     
-    void printFlags() const {
-        // TODO: реализуйте вывод состояния флагов
+    std::ostream& print(std::ostream& out) {
+        out << "active: " << (active?"true":"false") << "\n" <<
+        "ready: " << (ready?"true":"false") << "\n" <<
+        "valid: " << (valid?"true":"false") << "\n" <<
+        "error: " << (error?"true":"false") << std::endl;
+
+        return out;
     }
 };
 
@@ -22,12 +39,12 @@ void testFlags() {
     static_assert(sizeof(Flags) == 1, "Flags должна занимать 1 байт!");
     
     Flags f{};
-    f.printFlags();  // Ожидаем: все флаги false
+    f.print(std::cout);  // Ожидаем все флаги false
     
     // Установка флагов
     f.active = true;
     f.valid = true;
-    f.printFlags();  // Ожидаем: active и valid true, остальные false
+    f.print(std::cout);  // Ожидаем active и valid в true, остальные false
 }
 
 int main() {

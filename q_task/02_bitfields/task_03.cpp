@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <iostream>
 
 // Task 3: Регистр управления устройством
@@ -15,39 +16,84 @@ enum class DeviceMode {
     IDLE,
     ACTIVE,
     STANDBY,
-    ERROR
+    ERROR,
 };
 
+uint8_t toUint8(DeviceMode mode) {
+    return static_cast<uint8_t>(mode);
+}
+
+std::string ToString(DeviceMode mode) {
+    switch (mode) {
+        case DeviceMode::IDLE:
+            return "IDLE";
+        case DeviceMode::ACTIVE:
+            return "ACTIVE";
+        case DeviceMode::STANDBY:
+            return "STANDBY";
+        case DeviceMode::ERROR:
+            return "ERROR";    
+    }
+}
+
+DeviceMode ToDeviceMode(uint8_t mode) {
+    return static_cast<DeviceMode>(mode);
+}
+
+
 struct DeviceControl {
-    // TODO: реализуйте структуру
+    uint8_t reserved_:6;
+    uint8_t mode_:2;
+    uint8_t temperature_:4;
+    uint8_t speed_:3;
+    bool power_:1;
     
+    
+ 
     // Устанавливает скорость (0-7)
     bool setSpeed(unsigned int value) {
-        // TODO: реализуйте метод
-        return false;
+        if (value > 7) {
+            return false;
+        }
+        
+        speed_ = value;
+
+        return true;
     }
     
     // Устанавливает температуру (0-15)
     bool setTemperature(unsigned int value) {
-        // TODO: реализуйте метод
-        return false;
+        if (value > 15) {
+            return false;
+        }
+        
+        temperature_ = value;
+
+        return true;
     }
     
     // Устанавливает режим работы
     void setMode(DeviceMode mode) {
-        // TODO: реализуйте метод
+        mode_ = toUint8(mode);
     }
     
     // Включает/выключает устройство
     void setPower(bool on) {
-        // TODO: реализуйте метод
+       power_ = on;
     }
     
     // Выводит текущее состояние устройства
-    void printStatus() const {
-        // TODO: реализуйте метод
-    }
+    friend std::ostream& operator<<(std::ostream& out, const DeviceControl& dc) {
+        out << "power: " << dc.power_ << 
+            ", mode: "<< ToString(ToDeviceMode(dc.mode_))<<
+            ", speed: "<< dc.speed_ <<
+            ", temperature: "<< dc.temperature_;
+    
+        return out;
+    };
 };
+
+
 
 // Код для проверки
 void testDeviceControl() {
@@ -66,7 +112,7 @@ void testDeviceControl() {
     assert(!dev.setTemperature(16)); // Слишком большое значение
     
     // Вывод состояния
-    dev.printStatus();
+    std::cout << dev;
 }
 
 int main() {

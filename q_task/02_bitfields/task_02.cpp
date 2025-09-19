@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <iostream>
 
 // Task 2: RGB Color
@@ -11,38 +12,54 @@
 // Примечание: используйте битовые поля для оптимизации памяти
 
 struct RGBColor {
-    // TODO: реализуйте структуру
+    static constexpr unsigned int max_val = 255;
+
+    uint8_t red=0;
+    uint8_t green=0;
+    uint8_t blue=0;
     
     // Методы установки значений должны проверять диапазон
     bool setRed(unsigned int value) {
-        // TODO: реализуйте метод
-        return false;
+        if (value > max_val) {
+            return false;
+        }
+
+        red = value;
+
+        return true;
     }
     
-    bool setGreen(unsigned int value) {
-        // TODO: реализуйте метод
-        return false;
+    bool setGreen(unsigned int value){
+        if (value > max_val) {
+            return false;
+        }
+
+        green = value;
+
+        return true;
     }
     
     bool setBlue(unsigned int value) {
-        // TODO: реализуйте метод
-        return false;
+         if (value > max_val) {
+            return false;
+        }
+
+        blue = value;
+
+        return true;
     }
     
     // Геттеры
     unsigned int getRed() const {
-        // TODO: реализуйте метод
-        return 0;
+        return red;
     }
     
     unsigned int getGreen() const {
-        // TODO: реализуйте метод
-        return 0;
+        return green;
     }
     
     unsigned int getBlue() const {
-        // TODO: реализуйте метод
-        return 0;
+        return blue;
     }
 };
 
