@@ -17,54 +17,96 @@
 // 3. Иметь методы для проверки условий перехода (условные JMP)
 
 class CPUFlags {
-    // TODO: реализуйте структуру для хранения флагов
+    bool carry:1;
+    bool zero:1;
+    bool sign:1;
+    bool overflow:1;
+    bool interrupt:1;
+    uint8_t reserved:3;
     
 public:
     // Конструктор по умолчанию (все флаги = 0)
-    CPUFlags() {
-        // TODO: реализуйте конструктор
-    }
+    CPUFlags() {}
     
     // Обновление флагов после сложения
     void updateAfterAdd(uint8_t a, uint8_t b) {
-        // TODO: реализуйте обновление флагов после операции сложения
+        uint16_t result = static_cast<uint16_t>(a) + b;  // расширяем до 16 бит чтобы поймать carry
+    
+        carry = (result > 255);  // если результат больше чем может хранить uint8_t
+        zero = (result & 0xFF) == 0;  // если младшие 8 бит результата = 0
+        sign = (result & 0x80);  // если установлен старший бит (7-й)
+        
+        // overflow происходит когда:
+        // - оба числа положительные, а результат отрицательный
+        // - оба числа отрицательные, а результат положительный
+        bool a_sign = (a & 0x80);
+        bool b_sign = (b & 0x80);
+        bool r_sign = (result & 0x80);
+        overflow = (a_sign == b_sign) && (a_sign != r_sign);
     }
     
     // Обновление флагов после вычитания
     void updateAfterSub(uint8_t a, uint8_t b) {
-        // TODO: реализуйте обновление флагов после операции вычитания
+        uint16_t result = static_cast<uint16_t>(a) - b;  // расширяем до 16 бит чтобы поймать carry
+        
+        carry = (result & 0xFF) == 0;  // если младшие 8 бит результата = 0
+        zero = (result & 0xFF) == 0;  // если младшие 8 бит результата = 0
+        sign = (result & 0x80);  // если установлен старший бит (7-й)
+        
+        // overflow происходит когда:
+        // - оба числа положительные, а результат отрицательный
+        // - оба числа отрицательные, а результат положительный
+        bool a_sign = (a & 0x80);
+        bool b_sign = (b & 0x80);
+        bool r_sign = (result & 0x80);
+        overflow = (a_sign == b_sign) && (a_sign != r_sign);
     }
-    
+
     // Методы для условных переходов
     bool isEqual() const {
-        // TODO: реализуйте проверку условия "равно" (zero flag)
-        return false;
+        return zero;
     }
     
     bool isLess() const {
-        // TODO: реализуйте проверку условия "меньше" (sign != overflow)
-        return false;
+        return sign != overflow;
     }
     
     bool isGreater() const {
-        // TODO: реализуйте проверку условия "больше" (!zero && sign == overflow)
-        return false;
+        return !zero && sign == overflow;
     }
     
     // Сохранение состояния флагов
     uint8_t saveState() const {
-        // TODO: реализуйте сохранение состояния в байт
-        return 0;
+        uint8_t state = 0;
+        state |= carry ? 0x01 : 0;
+        state |= zero ? 0x02 : 0;
+        state |= sign ? 0x04 : 0;
+        state |= overflow ? 0x08 : 0;
+        state |= interrupt ? 0x10 : 0;
+        state |= (reserved << 5) & 0xE0;
+        return state;
     }
     
     // Восстановление состояния флагов
     void restoreState(uint8_t state) {
         // TODO: реализуйте восстановление состояния из байта
+        carry = (state & 0x01);
+        zero = (state & 0x02);
+        sign = (state & 0x04);
+        overflow = (state & 0x08);
+        interrupt = (state & 0x10);
+        reserved = (state & 0xE0);
     }
     
     // Вывод состояния флагов
     void printFlags() const {
         // TODO: реализуйте вывод текущего состояния всех флагов
+        std::cout << "carry: " << (carry ? "true" : "false") << std::endl;
+        std::cout << "zero: " << (zero ? "true" : "false") << std::endl;
+        std::cout << "sign: " << (sign ? "true" : "false") << std::endl;
+        std::cout << "overflow: " << (overflow ? "true" : "false") << std::endl;
+        std::cout << "interrupt: " << (interrupt ? "true" : "false") << std::endl;
+        std::cout << "reserved: " << (reserved ? "true" : "false") << std::endl;
     }
 };
 

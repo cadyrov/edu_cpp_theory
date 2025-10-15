@@ -25,78 +25,162 @@ enum class ColorMode {
     RGB_888 = 5
 };
 
+std::ostream& operator << (std::ostream& out,const ColorMode& data ) {
+    switch (data) {
+        case ColorMode::MONO:
+            out << "MONO";
+            break; 
+        case ColorMode::GRAY_4:
+            out << "GRAY_4";
+            break; 
+        case ColorMode::GRAY_16:
+            out << "GRAY_16";
+            break; 
+        case ColorMode::RGB_222:
+            out << "RGB_222";
+            break; 
+        case ColorMode::RGB_565:
+            out << "RGB_565";
+            break; 
+        case ColorMode::RGB_888:
+            out << "RGB_888";
+            break;
+        default:
+            out << "UNKNOWN"; 
+    }
+
+    return out;
+}
+
+
+enum class Orientation{
+    ANG_0 = 0,
+    ANG_90 = 1,
+    ANG_180 = 2,
+    ANG_270 = 3,
+};
+
+std::ostream& operator << (std::ostream& out,const Orientation& data ) {
+    switch (data) {
+        case Orientation::ANG_0:
+            out << "0°";
+            break; 
+        case Orientation::ANG_90:
+            out << "90°";
+            break; 
+        case Orientation::ANG_180:
+            out << "180°";
+            break; 
+        case Orientation::ANG_270:
+            out << "270°";
+            break; 
+        default:
+            out << "UNKNOWN"; 
+    }
+
+    return out;
+}
+
 class LCDControl {
+    uint8_t contrast_:4;
+    uint8_t brightness_:4;
+    uint8_t color_mode_:3;
+    uint8_t power_:1;
+    uint8_t orientation_:2;
+    uint8_t reserved_:2;
     // TODO: реализуйте структуру для хранения регистра управления
     
 public:
     // Конструктор по умолчанию
-    LCDControl() {
-        // TODO: реализуйте конструктор
-    }
+    LCDControl() {}
     
     // Методы управления питанием
     void setPower(bool on) {
-        // TODO: реализуйте включение/выключение
+        power_ = on;
     }
     
     bool isPowered() const {
-        // TODO: реализуйте проверку состояния питания
-        return false;
+        return power_;
     }
     
     // Методы управления яркостью
     bool setBrightness(uint8_t level) {
-        // TODO: реализуйте установку яркости (0-15)
-        return false;
+        if (level >15) {
+            return false;
+        }
+
+        brightness_ = level;
+
+        return true;
     }
     
     uint8_t getBrightness() const {
-        // TODO: реализуйте получение яркости
-        return 0;
+        return brightness_;
     }
     
     // Методы управления контрастом
     bool setContrast(uint8_t level) {
-        // TODO: реализуйте установку контраста (0-15)
-        return false;
+        if (level >15) {
+            return false;
+        }
+        contrast_ = level;
+
+        return true;
     }
     
     uint8_t getContrast() const {
-        // TODO: реализуйте получение контраста
-        return 0;
+        return contrast_;
     }
     
     // Методы управления ориентацией
     bool setOrientation(uint8_t angle) {
-        // TODO: реализуйте установку ориентации (0=0°, 1=90°, 2=180°, 3=270°)
-        return false;
+        if (angle > 3) {
+            return false;
+        }
+
+        orientation_ = angle;
+
+        return true;
     }
     
     uint8_t getOrientation() const {
-        // TODO: реализуйте получение ориентации
-        return 0;
+        return orientation_;
     }
     
     // Методы управления цветовым режимом
     bool setColorMode(ColorMode mode) {
-        // TODO: реализуйте установку цветового режима
-        return false;
+        color_mode_ = static_cast<uint8_t>(mode);
+
+        return true;
     }
     
     ColorMode getColorMode() const {
-        // TODO: реализуйте получение цветового режима
-        return ColorMode::MONO;
+        return static_cast<ColorMode>(color_mode_);
     }
     
+
     // Сохранение конфигурации
     uint16_t saveConfig() const {
+        uint16_t result = 0;
+        result |= contrast_ << 0;
+        result |= brightness_ << 4;
+        result |= color_mode_ << 8;
+        result |= power_ << 11;
+        result |= orientation_ << 12;
+        result |= reserved_ << 14;
+
         // TODO: реализуйте сохранение конфигурации в 16-битное число
-        return 0;
+        return result;
     }
     
     // Загрузка конфигурации
     void loadConfig(uint16_t config) {
-        // TODO: реализуйте загрузку конфигурации из 16-битного числа
+        contrast_ = config & 0x0F;
+        brightness_ = (config >> 4) & 0x0F;
+        color_mode_ = (config >> 8) & 0x07;
+        power_ = (config >> 11) & 0x01;
+        orientation_ = (config >> 12) & 0x03;
+        reserved_ = (config >> 14) & 0x03;
     }
     
     // Бонус: Анимация изменения яркости
@@ -105,8 +189,15 @@ public:
     }
     
     // Вывод текущей конфигурации
-    void printConfig() const {
-        // TODO: реализуйте вывод текущей конфигурации
+    friend std::ostream& operator << (std::ostream& out,const LCDControl& data ) {
+        out << "contrast: " << data.contrast_ <<  " " <<
+            "brightness: " << data.brightness_ <<  " " <<
+            "color_mode: " << data.getColorMode() <<  " " <<
+            "power: " << (data.power_? "ON":"OFF") << " " <<
+            "orientation: " << static_cast<Orientation>(data.orientation_) <<" " <<
+            "reserved: " << data.reserved_;
+
+        return out;
     }
 };
 

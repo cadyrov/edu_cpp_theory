@@ -14,65 +14,80 @@
 // bool canWrite = fp.canGroupWrite();  // false
 
 struct FilePermissions {
+    static const unsigned int max_write=0777;
     // TODO: реализуйте структуру для хранения прав rwx для owner, group и others
+    unsigned int owner:3;
+    unsigned int group:3;
+    unsigned int others:3;
     
     // Устанавливает права в восьмеричном формате (0-777)
     bool setOctal(unsigned int value) {
-        // TODO: реализуйте метод
-        return false;
+        if (value > max_write) {
+            return false;
+        }
+
+        owner = (value >> 6) & 7; 
+        group = (value >> 3) & 7; 
+        others = value & 7; 
+
+        return true;
     }
     
     // Методы проверки прав для владельца
     bool canOwnerRead() const {
         // TODO: реализуйте метод
-        return false;
+        return owner&4;
     }
     
     bool canOwnerWrite() const {
         // TODO: реализуйте метод
-        return false;
+        return owner&2;
     }
     
     bool canOwnerExecute() const {
         // TODO: реализуйте метод
-        return false;
+        return owner&1;;
     }
     
     // Методы проверки прав для группы
     bool canGroupRead() const {
         // TODO: реализуйте метод
-        return false;
+        return group&4;
     }
     
     bool canGroupWrite() const {
         // TODO: реализуйте метод
-        return false;
+        return group&2;
     }
     
     bool canGroupExecute() const {
         // TODO: реализуйте метод
-        return false;
+        return group&1;
     }
     
     // Методы проверки прав для остальных
     bool canOthersRead() const {
         // TODO: реализуйте метод
-        return false;
+        return others&4;
     }
     
     bool canOthersWrite() const {
         // TODO: реализуйте метод
-        return false;
+        return others&2;
     }
     
     bool canOthersExecute() const {
         // TODO: реализуйте метод
-        return false;
+        return others&1;
     }
     
     // Выводит права в формате rwxrwxrwx
-    void printPermissions() const {
-        // TODO: реализуйте метод
+    friend std::ostream& operator<< (std::ostream& out, FilePermissions fp) {
+        out << (fp.canOwnerRead()?"r":"-") <<(fp.canOwnerWrite()?"w":"-")<<(fp.canOwnerExecute()?"x":"-")<<
+        (fp.canGroupRead()?"r":"-") <<(fp.canGroupWrite()?"w":"-")<<(fp.canGroupExecute()?"x":"-")<<
+        (fp.canOthersRead()?"r":"-") <<(fp.canOthersWrite()?"w":"-")<<(fp.canOthersExecute()?"x":"-");
+
+        return out;
     }
 };
 
@@ -102,7 +117,7 @@ void testFilePermissions() {
     assert(!fp.setOctal(01000));  // Некорректное восьмеричное число
     
     // Вывод текущих прав
-    fp.printPermissions();  // Должно вывести: rw-r--r--
+    std::cout << fp;  // Должно вывести: rw-r--r--
 }
 
 int main() {

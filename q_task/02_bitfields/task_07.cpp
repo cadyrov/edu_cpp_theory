@@ -1,5 +1,8 @@
 #include <iostream>
 #include <cstdint>
+#include <chrono>
+#include <iomanip>
+#include <cassert>
 
 // Task 7: Упакованная дата
 // 
@@ -16,62 +19,109 @@
 // Структура должна занимать 3 байта
 
 class PackedDate {
-    // TODO: реализуйте структуру для хранения даты
+    uint16_t year_:12;
+    uint8_t day_:5;
+    uint8_t month_:4;
+    uint8_t weekday_:3;
     
 public:
     // Конструктор по умолчанию (текущая дата)
     PackedDate() {
-        // TODO: реализуйте конструктор
+        auto now = std::chrono::system_clock::now();
+        auto time_t = std::chrono::system_clock::to_time_t(now);
+        auto tm = std::localtime(&time_t);
+        setDate(tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday);
     }
     
     // Конструктор с параметрами
-    PackedDate(uint16_t year, uint8_t month, uint8_t day) {
-        // TODO: реализуйте конструктор
+    PackedDate(uint16_t year, uint8_t month, uint8_t day){
+        if (!isValidDate(year, month, day)){
+            throw std::invalid_argument("Invalid date");
+        }
+
+        setDate(year, month, day);
     }
     
     // Установка даты
     bool setDate(uint16_t year, uint8_t month, uint8_t day) {
-        // TODO: реализуйте метод установки даты с проверкой корректности
-        return false;
+        if (!isValidDate(year, month, day) ){
+            return false;
+        }
+
+        year_ = year - 1970;
+        month_ = month;
+        day_ = day;
+        weekday_ = calculateWeekday(year, month, day);
+        
+        return true;
     }
     
     // Получение компонентов даты
     uint16_t getYear() const {
-        // TODO: реализуйте получение года (добавить 1970)
-        return 0;
+        return 1970 + year_;
     }
     
     uint8_t getMonth() const {
-        // TODO: реализуйте получение месяца
-        return 0;
+        return  month_;
     }
     
     uint8_t getDay() const {
-        // TODO: реализуйте получение дня
-        return 0;
+        return day_;
     }
     
     // Получение дня недели (0=воскресенье)
     uint8_t getWeekday() const {
-        // TODO: реализуйте получение дня недели
-        return 0;
+        return weekday_;
     }
     
     // Проверка корректности даты
     static bool isValidDate(uint16_t year, uint8_t month, uint8_t day) {
-        // TODO: реализуйте проверку корректности даты
-        return false;
+        if (year < 1970 || year > 4095) {
+            return false;
+        }
+
+        if (month > 12 || day > 31 || day < 1) {
+            return false;
+        }
+
+        if (day > getDaysInMonth(year, month)) {
+            return false;
+        }
+
+        return true;
     }
     
     // Вычисление дня недели по алгоритму Зеллера
     static uint8_t calculateWeekday(uint16_t year, uint8_t month, uint8_t day) {
-        // TODO: реализуйте вычисление дня недели
-        return 0;
+        if (month == 1 || month == 2) {
+            year -=1;
+            month +=10;
+        } else {
+            month -=2;
+        }
+        return (day + (31 * month)/12 + year + year/4 - year/100 + year/400) %7;
     }
     
+    static bool isLeapYear(uint16_t year) {
+        return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+    }
+
+    // Получение количества дней в месяце
+    static uint8_t getDaysInMonth(uint16_t year, uint8_t month) {
+        static const uint8_t days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+        if (month == 2 && isLeapYear(year)) {
+            return 29;
+        }
+        return days[month - 1];
+    }
+
     // Вывод даты в формате YYYY-MM-DD (WWW)
-    void printDate() const {
-        // TODO: реализуйте вывод даты
+   friend std::ostream& operator << (std::ostream& os, const PackedDate& date) {
+    os << date.getYear() << '-'
+    << std::setw(2) << std::setfill('0') << static_cast<int>(date.getMonth()) << '-'
+    << std::setw(2) << std::setfill('0') << static_cast<int>(date.getDay())
+    << " (" << static_cast<int>(date.getWeekday()) << ")";
+ return os;
     }
 };
 
@@ -101,7 +151,7 @@ void testPackedDate() {
     std::cout << "PackedDate tests passed!\n";
     
     // Демонстрация вывода
-    date.printDate();
+    std::cout << date << std::endl;
 }
 
 int main() {
