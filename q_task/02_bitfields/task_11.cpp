@@ -1,4 +1,6 @@
 #include <cstdint>
+#include <cassert>
+#include <iostream>
 
 // Task 11: Упаковка RGB в одно число
 // 
@@ -16,14 +18,18 @@ struct RGB {
 
 // Упаковывает RGB компоненты в одно 32-битное число
 uint32_t packRGB(uint8_t r, uint8_t g, uint8_t b) {
-    // TODO: реализуйте функцию
-    return 0;
+    uint32_t res = b;
+    res |= g << 8;
+    res |= r << 16;
+
+    return res;
 }
 
 // Распаковывает 32-битное число в структуру RGB
 RGB unpackRGB(uint32_t color) {
-    // TODO: реализуйте функцию
-    return {0, 0, 0};
+    return {static_cast<uint8_t>((color>>16)&0xFF), 
+        static_cast<uint8_t>((color>>8)&0xFF), 
+        static_cast<uint8_t>(color&0xFF)};
 }
 
 // Код для проверки

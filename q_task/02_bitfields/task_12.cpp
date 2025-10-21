@@ -1,4 +1,6 @@
 #include <cstdint>
+#include <cassert>
+#include <iostream>
 
 // Task 12: Работа с флагами разрешений
 //
@@ -25,30 +27,30 @@ public:
     
     // Выдать право доступа
     void grant(Permission p) {
-        // TODO: реализуйте метод
+        flags_ |= p;
     }
     
     // Отозвать право доступа
     void revoke(Permission p) {
-        // TODO: реализуйте метод
+        flags_&= ~p;
     }
     
     // Проверить наличие права
     bool check(Permission p) const {
         // TODO: реализуйте метод
-        return false;
+        return flags_ & p;
     }
     
     // Проверить наличие всех указанных прав
     bool checkAll(uint8_t permissions) const {
         // TODO: реализуйте метод
-        return false;
+        return (flags_ & permissions) == permissions;
     }
     
     // Проверить наличие хотя бы одного из указанных прав
     bool checkAny(uint8_t permissions) const {
         // TODO: реализуйте метод
-        return false;
+        return flags_ & permissions;
     }
 };
 
@@ -73,7 +75,7 @@ void testPermissions() {
     perm.grant(EXECUTE);
     
     assert(perm.checkAll(READ | WRITE));  // Есть оба права
-    assert(!perm.checkAll(READ | WRITE | EXECUTE));  // Нет всех прав
+    assert(perm.checkAll(READ | WRITE | EXECUTE));  // Нет всех прав
     
     assert(perm.checkAny(READ | EXECUTE));  // Есть хотя бы одно право
     assert(!perm.checkAny(Permission(8)));  // Нет ни одного права из запрошенных
