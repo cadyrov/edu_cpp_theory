@@ -88,3 +88,38 @@ void wrapper(T&& arg) {
 - Литералы всегда R-value
 - std::move конвертирует в R-value, но не перемещает
 - Результат new всегда R-value
+
+### 6. Коллапсирование ссылок (Reference Collapsing)
+Когда в шаблоне подставляется тип с ссылкой в другую ссылку, происходит коллапсирование по правилам:
+
+```cpp
+// Правила коллапсирования:
+T& &    -> T&      // lvalue + lvalue = lvalue
+T&& &   -> T&      // rvalue + lvalue = lvalue
+T& &&   -> T&      // lvalue + rvalue = lvalue
+T&& &&  -> T&&     // rvalue + rvalue = rvalue
+
+// Правило: если хотя бы одна ссылка - lvalue, результат - lvalue
+```
+
+**Где встречается:**
+- При подстановке типов в `template<typename T> void func(T&&)`
+- При использовании `std::forward` (relies on collapsing)
+- При специализации шаблонов с ссылками
+
+**Примеры:**
+```cpp
+template<typename T>
+void wrapper(T&& arg) {
+    // Если T = int& (L-value ссылка),
+    // то T&& = int& && -> коллапсирует в int&
+    // Если T = int&& (R-value ссылка),  
+    // то T&& = int&& && -> коллапсирует в int&&
+}
+
+// Это основа для perfect forwarding
+template<typename T>
+void forward_wrapper(T&& arg) {
+    func(std::forward<T>(arg));  // Сохраняет категорию значения благодаря коллапсированию
+}
+```

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -19,9 +20,28 @@ public:
     }
     
     // TODO: delete copy constructor и copy assignment
+    Resource(const Resource& other) = delete;
+    Resource& operator=(const Resource& other) = delete;
     
     // TODO: реализуйте move constructor и move assignment
+    Resource(Resource&& other) noexcept {
+        data_ = other.data_;
+        owns_ = true;
+        other.data_ = nullptr;
+        other.owns_ = false;
+    }
+
+    Resource& operator=(Resource&& other) noexcept {
+        Resource temp(std::move(other));
+        swap(temp);
+        return *this;
+    }
     
+    void swap(Resource& other) noexcept {
+        std::swap(data_, other.data_);
+        std::swap(owns_, other.owns_);
+    }
+
     ~Resource() {
         if (owns_) delete data_;
     }
@@ -32,8 +52,8 @@ public:
 void testResourceMove() {
     Resource r1(42);
     
-    // TODO: Resource r2(std::move(r1));
-    // TODO: assert(r2.getValue() == 42);
+    Resource r2(std::move(r1));
+    assert(r2.getValue() == 42);
     
     std::cout << "Resource move tests passed!\n";
 }

@@ -18,11 +18,30 @@ public:
     }
     
     // TODO: delete copy constructor
+    UniqueBuffer(const UniqueBuffer& other)= delete;
     // TODO: delete copy assignment
-    
+    UniqueBuffer& operator=(const UniqueBuffer& other)= delete;
     // TODO: реализуйте move constructor
+    UniqueBuffer(UniqueBuffer&& other) {
+        buffer_ = other.buffer_;
+        size_ = other.size_;
+        other.buffer_ = nullptr;
+        other.size_ = 0;
+    };
     // TODO: реализуйте move assignment
-    
+    UniqueBuffer& operator = (UniqueBuffer&& other) {
+        UniqueBuffer cp(std::move(other));
+
+        swap(cp);
+
+        return *this;
+    };
+
+    void swap(UniqueBuffer& other) {
+        std::swap(buffer_, other.buffer_);
+        std::swap(size_, other.size_);
+    }
+
     ~UniqueBuffer() {
         delete[] buffer_;
     }
@@ -34,11 +53,10 @@ public:
 void testUniqueBuffer() {
     UniqueBuffer buf1(100);
     
-    // TODO: UniqueBuffer buf2(std::move(buf1));
-    // TODO: assert(buf2.size() == 100);
+    UniqueBuffer buf2(std::move(buf1));
+    assert(buf2.size() == 100);
     
-    // TODO: Проверьте что копирование запрещено (не компилируется)
-    // UniqueBuffer buf3 = buf1;  // Error!
+   // UniqueBuffer buf3 = buf1;  // Error!
     
     std::cout << "UniqueBuffer tests passed!\n";
 }

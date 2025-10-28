@@ -18,16 +18,21 @@ public:
     void process(std::string&& s) { s += " (R-value)"; }
 };
 
-// TODO: реализуйте template wrapper функцию с perfect forwarding
+template<typename T>
+void wrapper(Processor& proc,T&& arg) {
+    // std::forward сохраняет категорию значения
+    proc.process(std::forward<T>(arg));
+}
 
 void testPerfectForwarding() {
     Processor proc;
     
     std::string text = "hello";
-    // TODO: wrapper(proc, text);
-    // TODO: assert(text.find("L-value") != std::string::npos);
+
+    wrapper(proc, text);
+    assert(text.find("L-value") != std::string::npos);
     
-    // TODO: wrapper(proc, std::string("world"));
+    wrapper(proc, std::string("world"));
     
     std::cout << "Perfect forwarding tests passed!\n";
 }

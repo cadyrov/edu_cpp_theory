@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cassert>
 #include <string>
+#include <utility>
 
 // Task 7: RVO (Return Value Optimization) и оптимизация перемещением
 //
@@ -15,11 +16,31 @@ public:
     Logger(const std::string& s) : data_(s) {}
     
     // TODO: реализуйте copy constructor (с логированием)
+    Logger(const Logger& other):data_(other.data_) {
+        copy_count++;
+    }
     // TODO: реализуйте move constructor (с логированием)
+    Logger(Logger&& other):data_(std::move(other.data_)) {
+        move_count++;
+    }
     
     // TODO: реализуйте copy assignment (с логированием)
+    Logger& operator = (const Logger& other) {
+        data_ = other.data_;
+
+       copy_count++;
+
+       return *this; 
+    }
     // TODO: реализуйте move assignment (с логированием)
-    
+    Logger& operator = (Logger&& other) {
+        std::swap(data_, other.data_);
+ 
+        move_count++;
+ 
+        return *this; 
+    }
+
     static void reset() { copy_count = 0; move_count = 0; }
     static int getCopyCount() { return copy_count; }
     static int getMoveCount() { return move_count; }
@@ -28,17 +49,19 @@ public:
 };
 
 // TODO: инициализация static переменных
+int Logger::copy_count = 0;
+int Logger::move_count = 0;
 
 Logger createLogger() {
     // TODO: return Logger("created");
-    // Компилятор применит RVO и избежит копирования
+    return Logger("created");
 }
 
 void testRVO() {
     Logger::reset();
     Logger log = createLogger();
     
-    // TODO: assert(Logger::getCopyCount() == 0);
+    assert(Logger::getCopyCount() == 0);
     
     std::cout << "RVO tests passed!\n";
 }

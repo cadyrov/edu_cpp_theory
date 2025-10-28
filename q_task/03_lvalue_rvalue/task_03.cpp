@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cassert>
+#include <utility>
 #include <vector>
 
 // Task 3: Семантика перемещения (Move Semantics)
@@ -19,8 +20,18 @@ public:
     }
     
     // TODO: конструктор перемещения
+    Vector(Vector&& other):data_(other.data_), size_(other.size_){
+        other.data_ = nullptr;
+        other.size_ = 0;
+    }
     
     // TODO: оператор перемещающего присваивания
+    Vector& operator=(Vector&& other) {
+        Vector cp(std::move(other));
+        std::swap(*this, cp);
+
+        return *this;
+    }
     
     ~Vector() { delete[] data_; }
     
@@ -32,9 +43,9 @@ void testMoveSemantics() {
     Vector v1(5);
     v1[0] = 42;
     
-    // TODO: Vector v2(std::move(v1));
-    // TODO: assert(v2[0] == 42);
-    // TODO: assert(v1.size() == 0);
+    Vector v2(std::move(v1));
+    assert(v2[0] == 42);
+    assert(v1.size() == 0);
     
     std::cout << "Move semantics tests passed!\n";
 }

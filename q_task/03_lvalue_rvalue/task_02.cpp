@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -14,8 +15,16 @@ class StringContainer {
 public:
     StringContainer() = default;
     
-    // TODO: реализуйте перегруженные методы setString
-    
+    // Для L-value - копируем
+    void setString(const std::string& s) {
+        data_ = s;
+    }
+
+    // Для R-value - перемещаем
+    void setString(std::string&& s) {
+        data_ = std::move(s);
+    }
+
     std::string getString() const { return data_; }
 };
 
@@ -24,12 +33,12 @@ void testStringBinding() {
     
     // L-value: существующая строка
     std::string existing = "hello";
-    // TODO: container.setString(existing);
-    // TODO: assert(container.getString() == "hello");
+    container.setString(existing);
+    assert(container.getString() == "hello");
     
     // R-value: временная строка
-    // TODO: container.setString("world");
-    // TODO: assert(container.getString() == "world");
+    container.setString("world");
+    assert(container.getString() == "world");
     
     std::cout << "String binding tests passed!\n";
 }
