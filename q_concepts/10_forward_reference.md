@@ -76,10 +76,36 @@ template<typename T>
 void f(const T&& param);  // НЕ универсальная ссылка
 ```
 
-### 2. auto&&
+### 2. auto&& и decltype(auto)
 ```cpp
 // Универсальная ссылка с auto
 auto&& val = someValue;  // Тип выводится правильно
+```
+
+`decltype(auto)` помогает сохранить точный тип возвращаемого выражения, включая ссылочность, что важно при построении обёрток с perfect forwarding.
+
+#### ✅ Хорошо
+```cpp
+template<typename T>
+decltype(auto) forward_get(T&& obj) {
+    // Возвращаем то, что вернул get(), не теряя ссылку
+    return std::forward<T>(obj).get();
+}
+
+auto&& ref = get_container();
+decltype(auto) elem = forward_get(ref);  // Сохраняем l-value ссылку
+```
+
+#### ❌ Плохо
+```cpp
+template<typename T>
+auto forward_get_bad(T&& obj) {
+    // auto отбрасывает ссылку, возможна лишняя копия
+    return std::forward<T>(obj).get();
+}
+
+decltype(auto) broken_ref = forward_get_bad(ref_source());  
+// Возвращается временный объект → висячая ссылка
 ```
 
 ### 3. Perfect Forwarding в конструкторах
