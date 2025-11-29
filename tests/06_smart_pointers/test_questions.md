@@ -681,3 +681,4 @@ D) Неопределенное поведение
 34. **A** - `std::shared_ptr<int> ptr(new int[100], deleter);`
 35. **A** - "Derived destroyed" (правильный полиморфизм)
 
+

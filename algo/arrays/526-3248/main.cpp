@@ -12,53 +12,45 @@
 // Consider the number of unique elements in nums to be k​​​​​​​​​​​​​​. After removing duplicates, return the number of unique elements k.
 class Solution {
 public:
-    int RemoveDuplicates(std::vector<int>& nums) {
-        if (nums.size() < 2) {
+    int RemoveDuplicates(std::vector<int>& nums) const {
+        if (nums.size()<2) {
             return nums.size();
         }
- 
-        int left = 1;
-        int right = 1;
 
-        if  (nums.size() == 2 && nums[left] == nums[left]-1) { 
-            return 1;
-        }
-
-        int limit = 0;
+        size_t k = nums.size();
         for (int i = 1; i < nums.size(); ++i) {
-            if (nums[i] == nums[i -1]) {
-                ++limit;
+            if (nums[i] == nums[i-1]) {
+                --k;
             }
         }
 
+        size_t l = 1;
+        size_t r = 1;
 
-
-        for (;left < nums.size()-limit; ) {
-            if (nums[left] <= nums[left]-1) {
-                for (;right < nums.size() && (nums[right] <= nums[left-1] || right <=left);) {
-                    ++right;
+        for (; l < k; ++l) {
+            if (nums[l] <= nums[l-1]) {
+                for (;nums[r]<=nums[l-1]&&r < nums.size();++r) {}
+                if (r == nums.size()) {
+                    return  k;
                 }
 
-                if (right < nums.size()) {
-                    return left;
-                }
-
-                nums[left] = nums[right];
+                nums[l] = nums[r];
             }
-
-            ++left;
-            ++right;
         }
 
-        return left;
+        return static_cast<int>(k);
     }
 };
 
 int main() {
     auto data = std::vector<int>{1, 2, 2, 2, 3, 3, 5};
-    std::cout << Solution().RemoveDuplicates(data) << std::endl;
     assert(Solution().RemoveDuplicates(data) == 4);
-    
+    data = std::vector<int>{1};
+    assert(Solution().RemoveDuplicates(data) == 1);
+    data = std::vector<int>{1,1 };
+    assert(Solution().RemoveDuplicates(data) == 1);
+
+    std::cout << "tests accept, enter array" << std::endl;
 
     int n;
     std::vector<int> in;
@@ -73,11 +65,13 @@ int main() {
 
     assert(std::is_sorted(in.begin(), in.end()));
     
-    Solution().RemoveDuplicates(in);
+    int res = Solution().RemoveDuplicates(in);
 
     for (auto it = in.begin();it != in.end(); ++it) {
-        std::cout << *it << " ";
+        std::cout << *it <<" ";
     }
+
+    std::cout <<"\n"<< res << std::endl;
 
     return 0;
 }

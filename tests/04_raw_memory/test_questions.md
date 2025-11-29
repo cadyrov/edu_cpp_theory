@@ -682,3 +682,4 @@ D) Использовать только `std::vector`
 34. **A** - Использовать `std::uninitialized_fill_n` после выделения памяти
 35. **B** - Использовать `::operator new` и `::operator delete` для выделения, `std::destroy_n` для деинициализации
 
+

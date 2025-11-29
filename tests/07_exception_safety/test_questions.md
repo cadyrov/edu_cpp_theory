@@ -756,3 +756,4 @@ D) Ошибка компиляции
 34. **B** - Условный noexcept: функция noexcept только если riskyOperation() noexcept
 35. **B** - res останется валидным (базовая гарантия vector)
 
+
