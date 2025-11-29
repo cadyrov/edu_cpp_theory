@@ -1,81 +1,88 @@
-#include <string>
 #include <vector>
-#include <utility>
+#include <string>
 #include <iostream>
+#include <algorithm>
 
-// Task 3: Константные итераторы
-// 
-// Реализуйте класс ReadOnlyVector, который:
-// 1. Хранит вектор строк
-// 2. Предоставляет только read-only доступ к элементам
-// 3. Позволяет итерироваться по элементам, но не изменять их
-// 4. Имеет методы size() и empty()
+// Task 3: Const-correct реализация итераторов
+//
+// Реализуй класс Container, который предоставляет const и non-const итераторы
+// с правильной const-correctness. Класс должен поддерживать range-based for циклы
+// для const и non-const объектов.
+//
+// Требования:
+// 1. Non-const begin()/end() возвращают non-const итераторы
+// 2. Const begin()/end() возвращают const итераторы
+// 3. cbegin()/cend() возвращают const итераторы (даже для non-const объектов)
+// 4. Range-based for должен корректно работать для const и non-const объектов
 
-class ReadOnlyVector {
-    std::vector<std::string> data_;
+template<typename T>
+class Container {
+    std::vector<T> data_;
 
 public:
-    using const_iterator = std::vector<std::string>::const_iterator;
-    // TODO: Реализуйте:
-    // 1. Конструктор из vector<string>
-    ReadOnlyVector(std::vector<std::string> data) {
-        // TODO: реализуйте
-    }
-
-    // 2. begin() и end(), возвращающие константные итераторы
-    const_iterator begin() const {
-        // TODO: реализуйте
-        return data_.begin();
-    }
-
-    const_iterator end() const {
-        // TODO: реализуйте
-        return data_.end();
-    }
-    // 3. size() и empty()
-    size_t size() const {
-        // TODO: реализуйте
-        return 0;
-    }
-
-    bool empty() const {
-        // TODO: реализуйте
-        return true;
-    }
-
-    // 4. operator[] для константного доступа к элементам
-    const std::string& operator[](size_t idx) const {
-        // TODO: реализуйте
-        static std::string empty;
-        return empty;
+    using iterator = typename std::vector<T>::iterator;
+    using const_iterator = typename std::vector<T>::const_iterator;
+    
+    Container(std::initializer_list<T> init) : data_(init) {}
+    
+    // TODO: Implement non-const begin() and end()
+    iterator begin() {
+        // TODO: implement
     }
     
+    iterator end() {
+        // TODO: implement
+    }
+    
+    // TODO: Implement const begin() and end()
+    const_iterator begin() const {
+        // TODO: implement
+    }
+    
+    const_iterator end() const {
+        // TODO: implement
+    }
+    
+    // TODO: Implement cbegin() and cend() (always const)
+    const_iterator cbegin() const {
+        // TODO: implement
+    }
+    
+    const_iterator cend() const {
+        // TODO: implement
+    }
+    
+    size_t size() const { return data_.size(); }
 };
 
-// Код для проверки
-void testReadOnlyVector() {
-    std::vector<std::string> data = {"one", "two", "three"};
-    const ReadOnlyVector ro(data);
+void testContainer() {
+    Container<int> container{1, 2, 3, 4, 5};
+    const Container<int>& const_container = container;
     
-    // Проверка размера
-    std::cout << "Size: " << ro.size() << "\n";
-    std::cout << "Empty: " << ro.empty() << "\n";
+    // These should compile:
+    for (auto& item : container) {
+        item *= 2;  // Modify through non-const iterator
+    }
     
-    // Проверка доступа к элементам
-    std::cout << "First element: " << ro[0] << "\n";
-    
-    // Проверка итерации
-    for (const auto& item : ro) {
-        std::cout << item << " ";
+    for (const auto& item : const_container) {
+        std::cout << item << " ";  // Read through const iterator
     }
     std::cout << "\n";
     
-    // Эти строки НЕ должны компилироваться:
-    // ro[0] = "new";                    // Нельзя изменять элементы
-    // auto it = ro.begin(); *it = "new"; // Нельзя изменять через итератор
+    // These should NOT compile:
+    // for (auto& item : const_container) {
+    //     item *= 2;  // Error: cannot modify through const iterator
+    // }
+    
+    // These should work (cbegin/cend always return const iterators):
+    for (auto it = container.cbegin(); it != container.cend(); ++it) {
+        std::cout << *it << " ";  // OK: reading
+        // *it = 10;               // Error: cannot modify through const iterator
+    }
 }
 
 int main() {
-    testReadOnlyVector();
+    testContainer();
     return 0;
 }
+

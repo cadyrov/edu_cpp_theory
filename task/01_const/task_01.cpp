@@ -1,58 +1,62 @@
-#include <string>
 #include <vector>
+#include <stdexcept>
 #include <iostream>
 
-// Task 1: Константность и геттеры
-// Реализуйте геттеры для класса Configuration, обеспечив:
-// 1. Защиту от модификации возвращаемых данных
-// 2. Максимальную производительность
-// 3. Следование best practices для const-correctness
+// Task 1: Const-correct operator[] с проверкой границ
+//
+// Реализуй класс SafeArray, который предоставляет const и non-const версии
+// operator[] с правильной const-correctness. Const версия должна возвращать
+// const ссылку и бросать исключение при выходе за границы, а non-const версия
+// должна позволять модификацию, но также бросать исключение при выходе за границы.
+//
+// Требования:
+// 1. Non-const operator[] возвращает non-const ссылку
+// 2. Const operator[] возвращает const ссылку
+// 3. Обе версии выполняют проверку границ
+// 4. Const версия может быть вызвана на const объектах
+// 5. Non-const версия не может быть вызвана на const объектах
 
-class Configuration {
-    std::string name_;
-    int value_;
-    std::vector<std::string> options_;
+class SafeArray {
+    std::vector<int> data_;
+
 public:
-    Configuration(std::string name, int value) 
-        : name_(name), value_(value) {}
+    SafeArray(std::initializer_list<int> init) : data_(init) {}
     
-    // TODO: Реализуйте геттеры с правильной константностью
-    int GetValue() const {
-        // TODO: реализуйте
-        return 0;
-    }
-
-    const std::string& GetName() const {
-        // TODO: реализуйте
-        return name_;
-    }
-
-    const std::vector<std::string>& GetOptions() const {
-        // TODO: реализуйте
-        return options_;
+    // TODO: Implement non-const operator[]
+    // Should return non-const reference, allow modification
+    int& operator[](size_t index) {
+        // TODO: implement bounds checking and return reference
     }
     
+    // TODO: Implement const operator[]
+    // Should return const reference, prevent modification
+    const int& operator[](size_t index) const {
+        // TODO: implement bounds checking and return const reference
+    }
+    
+    size_t size() const { return data_.size(); }
 };
 
-// Код для проверки решения
-void testConfiguration() {
-    const Configuration cfg("test", 42);
+void testSafeArray() {
+    SafeArray arr{1, 2, 3, 4, 5};
+    const SafeArray& const_arr = arr;
     
-    // Эти строки должны компилироваться:
-    auto name = cfg.GetName();        // Получение имени
-    auto value = cfg.GetValue();      // Получение значения
-    auto& options = cfg.GetOptions(); // Получение опций
+    // These should compile and work:
+    arr[0] = 10;                    // Modify through non-const version
+    int val = const_arr[0];         // Read through const version
+    std::cout << "Value: " << val << "\n";
     
-    std::cout << "Name: " << name << "\n";
-    std::cout << "Value: " << value << "\n";
-    std::cout << "Options size: " << options.size() << "\n";
+    // These should NOT compile:
+    // const_arr[0] = 20;            // Error: cannot modify through const reference
+    // int& ref = const_arr[0];      // Error: cannot bind const reference to non-const reference
     
-    // Эти строки НЕ должны компилироваться:
-    // cfg.GetOptions().push_back("new"); // Ошибка: нельзя модифицировать вектор
-    // cfg.GetName().clear();             // Ошибка: нельзя модифицировать строку
+    // These should throw std::out_of_range:
+    // arr[100];                     // Out of bounds
+    // const_arr[100];               // Out of bounds
 }
 
 int main() {
-    testConfiguration();
+    testSafeArray();
     return 0;
 }
+

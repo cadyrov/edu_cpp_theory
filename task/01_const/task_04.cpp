@@ -1,75 +1,92 @@
 #include <string>
-#include <vector>
-#include <memory>
-#include <utility>
-#include <algorithm>
 #include <iostream>
+#include <cstring>
 
-// Task 4: Логическая константность
-// 
-// Реализуйте класс LazyString, который:
-// 1. Хранит строку в разных представлениях (normal и uppercase)
-// 2. Ленивое преобразование в uppercase при первом запросе
-// 3. Кеширование результата для последующих запросов
-// 4. Поддержка константной корректности
+// Task 4: Безопасное использование const_cast с legacy C API
+//
+// Реализуй обёртку вокруг legacy C API, которое требует non-const указатели,
+// но обеспечивает const-correctness в C++ коде. Ты должен использовать const_cast
+// правильно и понимать, когда это безопасно, а когда нет.
+//
+// Критично: const_cast безопасен ТОЛЬКО когда исходный объект НЕ был const.
+// Снятие const с изначально const объекта - это undefined behavior.
+//
+// Требования:
+// 1. print() должен работать с const объектами (API не модифицирует)
+// 2. modify() НЕ должен работать с const объектами (API модифицирует)
+// 3. Используй const_cast только когда безопасно (объект был изначально non-const)
+// 4. Пойми разницу между const указателем и изначально const объектом
 
-class LazyString {
-    std::string original_;
-    mutable std::string uppercase_cache_;
-    mutable bool cache_valid_ = false;
+extern "C" {
+    struct LegacyData {
+        char buffer[256];
+        int length;
+    };
+    
+    // Legacy function that doesn't modify data but takes non-const pointer
+    void legacy_print(LegacyData* data) {
+        std::cout << "Buffer: " << data->buffer << ", Length: " << data->length << "\n";
+    }
+    
+    // Legacy function that modifies data
+    void legacy_modify(LegacyData* data, const char* text) {
+        strncpy(data->buffer, text, sizeof(data->buffer) - 1);
+        data->buffer[sizeof(data->buffer) - 1] = '\0';
+        data->length = strlen(data->buffer);
+    }
+}
+
+class SafeLegacyWrapper {
+    LegacyData data_;
 
 public:
-    // TODO: Реализуйте:
-    // 1. Конструктор из string
-    LazyString(std::string original) {
-        // TODO: реализуйте
+    SafeLegacyWrapper(const char* text) {
+        strncpy(data_.buffer, text, sizeof(data_.buffer) - 1);
+        data_.buffer[sizeof(data_.buffer) - 1] = '\0';
+        data_.length = strlen(data_.buffer);
     }
-
-    // 2. Метод получения оригинальной строки (не константный)
-    std::string& get(){
-        // TODO: реализуйте
-        return original_;
+    
+    // TODO: Implement const print() method
+    // Should work with const objects because legacy_print doesn't modify
+    // Use const_cast safely (data_ was originally non-const)
+    void print() const {
+        // TODO: implement using const_cast
     }
-    // 3. Метод получения UPPERCASE версии (константный)
-    const std::string& getUpperCase() const{
-        // TODO: реализуйте ленивое преобразование с кешированием
-        return original_;
+    
+    // TODO: Implement non-const modify() method
+    // Should NOT work with const objects
+    void modify(const char* text) {
+        // TODO: implement without const_cast (not needed here)
     }
-
-    // 4. Метод изменения строки (сбрасывает кеш)
-    void set(std::string original) {
-        // TODO: реализуйте
-    }
-    // 5. Метод size() (константный)
-    size_t size() const {
-        // TODO: реализуйте
+    
+    // TODO: Implement const getLength() method
+    int getLength() const {
+        // TODO: implement
         return 0;
     }
 };
 
-// Код для проверки
-void testLazyString() {
-    LazyString str("Hello, World!");
+void testSafeLegacyWrapper() {
+    SafeLegacyWrapper wrapper("test");
+    const SafeLegacyWrapper& const_wrapper = wrapper;
     
-    // Проверка базовой функциональности
-    std::cout << "Original: " << str.get() << "\n";
-    std::cout << "Upper: " << str.getUpperCase() << "\n";
+    // These should compile:
+    wrapper.print();                    // Non-const object
+    const_wrapper.print();              // Const object (safe const_cast)
+    wrapper.modify("new text");         // Non-const object
+    int len = const_wrapper.getLength(); // Const object
     
-    // Проверка константности
-    const LazyString const_str("Test String");
-    std::cout << "Const Upper: " << const_str.getUpperCase() << "\n";
+    // This should NOT compile:
+    // const_wrapper.modify("new");     // Error: cannot modify const object
     
-    // Проверка изменения и сброса кеша
-    str.set("New String");
-    std::cout << "New Upper: " << str.getUpperCase() << "\n";
-    
-    // Эти строки НЕ должны компилироваться:
-    // const_str.set("test");          // Нельзя модифицировать const объект
-    // const_str.get() = "test";       // Нельзя модифицировать через результат
-    // str.getUpperCase() = "TEST";    // Нельзя модифицировать результат uppercase
+    // Critical test: what happens with originally const object?
+    const SafeLegacyWrapper originally_const("const");
+    // originally_const.print();        // This should work (const_cast is safe here)
+    // But if we had: const LegacyData orig_const; and tried to const_cast it - UB!
 }
 
 int main() {
-    testLazyString();
+    testSafeLegacyWrapper();
     return 0;
 }
+

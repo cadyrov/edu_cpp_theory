@@ -1,82 +1,107 @@
 #include <string>
+#include <vector>
 #include <iostream>
-#include <cstring>
+#include <algorithm>
 
-// Task 5: const_cast и legacy API
-// 
-// У вас есть legacy C API, который не использует const.
-// Нужно написать современный C++ wrapper, который:
-// 1. Обеспечивает const-correctness
-// 2. Безопасно работает с legacy функциями
-// 3. Защищает от неправильного использования const_cast
+// Task 5: Const-correct перегрузка операторов
+//
+// Реализуй класс Matrix с const-correct перегрузкой операторов.
+// Операторы, которые не модифицируют объект, должны быть const, а операторы,
+// которые модифицируют, должны быть non-const.
+//
+// Требования:
+// 1. operator+ должен быть const (создаёт новый объект)
+// 2. operator+= НЕ должен быть const (модифицирует объект)
+// 3. operator* (скалярное умножение) должен иметь const и non-const версии
+// 4. operator[] должен иметь const и non-const версии
+// 5. Все операторы должны следовать принципам const-correctness
 
-// Legacy C API (не меняйте этот код)
-extern "C" {
-    struct Data {
-        char* buffer;
-        int length;
-    };
-    
-    // Legacy функция, которая на самом деле не модифицирует данные
-    void legacy_print(Data* data) {
-        std::cout << "Buffer: " << data->buffer << "\n";
-        std::cout << "Length: " << data->length << "\n";
-    }
-    
-    // Legacy функция, которая модифицирует данные
-    void legacy_modify(Data* data, const char* new_text) {
-        strcpy(data->buffer, new_text);
-        data->length = strlen(new_text);
-    }
-}
+class Matrix {
+    std::vector<std::vector<int>> data_;
+    size_t rows_;
+    size_t cols_;
 
-// Ваш современный C++ wrapper
-class SafeData {
-    Data data_;
 public:
-    SafeData(const char* text) {
-        data_.buffer = new char[100];  // Упрощенно, в реальном коде нужен более умный менеджмент памяти
-        legacy_modify(&data_, text);
+    Matrix(size_t rows, size_t cols) : rows_(rows), cols_(cols) {
+        data_.resize(rows, std::vector<int>(cols, 0));
     }
     
-    ~SafeData() {
-        delete[] data_.buffer;
+    Matrix(std::initializer_list<std::initializer_list<int>> init) {
+        rows_ = init.size();
+        if (rows_ > 0) {
+            cols_ = init.begin()->size();
+            for (const auto& row : init) {
+                data_.emplace_back(row.begin(), row.end());
+            }
+        }
     }
     
-    // TODO: Реализуйте:
-    // 1. Метод print() который можно вызвать для константных объектов
-    void print() const {
-        // TODO: реализуйте
+    // TODO: Implement const operator+
+    // Should create new matrix, not modify this
+    Matrix operator+(const Matrix& other) const {
+        // TODO: implement
+        return Matrix(0, 0);
     }
-    // 2. Метод modify() который нельзя вызвать для константных объектов
-    void modify(const char* new_text) {
-        // TODO: реализуйте
+    
+    // TODO: Implement non-const operator+=
+    // Should modify this matrix
+    Matrix& operator+=(const Matrix& other) {
+        // TODO: implement
+        return *this;
     }
-    // 3. Метод get_length() который можно вызвать для константных объектов
-    int get_length() const {
-        // TODO: реализуйте
-        return 0;
+    
+    // TODO: Implement const operator* (scalar multiplication, creates new matrix)
+    Matrix operator*(int scalar) const {
+        // TODO: implement
+        return Matrix(0, 0);
     }
-    // 4. Корректную работу с legacy API, используя const_cast только где действительно необходимо
+    
+    // TODO: Implement non-const operator*= (scalar multiplication, modifies this)
+    Matrix& operator*=(int scalar) {
+        // TODO: implement
+        return *this;
+    }
+    
+    // TODO: Implement non-const operator[] (returns non-const row reference)
+    std::vector<int>& operator[](size_t row) {
+        // TODO: implement
+        static std::vector<int> dummy;
+        return dummy;
+    }
+    
+    // TODO: Implement const operator[] (returns const row reference)
+    const std::vector<int>& operator[](size_t row) const {
+        // TODO: implement
+        static const std::vector<int> dummy;
+        return dummy;
+    }
+    
+    size_t rows() const { return rows_; }
+    size_t cols() const { return cols_; }
 };
 
-// Код для проверки
-void testSafeData() {
-    SafeData data("test");
-    const SafeData const_data("const test");
+void testMatrix() {
+    Matrix m1{{1, 2}, {3, 4}};
+    const Matrix m2{{5, 6}, {7, 8}};
     
-    // Эти строки должны компилироваться:
-    data.print();                  // Печать неконстантного объекта
-    const_data.print();           // Печать константного объекта
-    data.modify("new text");      // Модификация неконстантного объекта
-    std::cout << data.get_length() << "\n";        // Длина неконстантного объекта
-    std::cout << const_data.get_length() << "\n";  // Длина константного объекта
+    // These should compile:
+    Matrix m3 = m1 + m2;           // Const operator+ on non-const object
+    Matrix m4 = m2 + m1;           // Const operator+ on const object
+    m1 += m2;                      // Non-const operator+=
+    Matrix m5 = m1 * 2;            // Const operator* (creates new)
+    m1 *= 3;                       // Non-const operator*=
+    m1[0][0] = 100;                // Non-const operator[]
+    int val = m2[0][0];            // Const operator[]
     
-    // Эти строки НЕ должны компилироваться:
-    // const_data.modify("new text");  // Ошибка: нельзя модифицировать константный объект
+    // These should NOT compile:
+    // m2 += m1;                    // Error: cannot modify const object
+    // m2 *= 2;                     // Error: cannot modify const object
+    // m2[0][0] = 200;              // Error: cannot modify through const operator[]
+    // m2[0] = std::vector<int>();  // Error: cannot modify through const operator[]
 }
 
 int main() {
-    testSafeData();
+    testMatrix();
     return 0;
 }
+

@@ -1,60 +1,77 @@
+#include <string>
+#include <unordered_map>
+#include <memory>
 #include <iostream>
 
-// Task 6: Константные указатели
-// 
-// Задача на понимание:
-// 1. Разницы между const pointer и pointer to const
-// 2. East const vs West const стилей
-// 3. Комбинации const pointer to const data
-// 4. Правильного использования константных указателей
+// Task 6: Const-correctness возвращаемых значений и защита внутренних данных
+//
+// Реализуй класс ConfigManager, который возвращает ссылки на внутренние данные.
+// Пойми, когда возвращать const vs non-const ссылки, и когда const возвращаемые
+// значения полезны vs избыточны.
+//
+// Требования:
+// 1. getValue() должен возвращать const ссылку (защищает внутренние данные)
+// 2. getMutableValue() должен возвращать non-const ссылку (позволяет модификацию)
+// 3. getValueCopy() должен возвращать по значению (const избыточен, но безвреден)
+// 4. Пойми разницу между возвратом const ссылки и const значения
 
-class Settings {
-    int value_;
+class ConfigManager {
+    std::unordered_map<std::string, std::string> config_;
+
 public:
-    Settings(int v) : value_(v) {}
-    void setValue(int v) { value_ = v; }
-    int getValue() const { return value_; }
+    void setValue(const std::string& key, const std::string& value) {
+        config_[key] = value;
+    }
+    
+    // TODO: Implement getValue() returning const reference
+    // Should protect internal data from modification
+    const std::string& getValue(const std::string& key) const {
+        // TODO: implement (may need to handle missing key)
+        static const std::string empty;
+        return empty;
+    }
+    
+    // TODO: Implement getMutableValue() returning non-const reference
+    // Should allow modification of internal data
+    std::string& getMutableValue(const std::string& key) {
+        // TODO: implement
+        static std::string dummy;
+        return dummy;
+    }
+    
+    // TODO: Implement getValueCopy() returning by value
+    // Const qualifier is redundant here (value is copied anyway)
+    // but it's harmless and shows intent
+    std::string getValueCopy(const std::string& key) const {
+        // TODO: implement
+        return "";
+    }
+    
+    // TODO: Think about: should this return const std::string or std::string?
+    // Answer: std::string (const is redundant for return by value)
 };
 
-// TODO: Реализуйте функции, которые демонстрируют различные случаи использования константных указателей:
-
-// 1. Функция, принимающая указатель на константные данные (нельзя менять *ptr)
-void printSettings(const Settings* ptr) {
-    // TODO: реализуйте функцию
-}
-
-// 2. Функция, принимающая константный указатель (нельзя менять ptr)
-void rememberSettings(Settings* const ptr) {
-    // TODO: реализуйте функцию
-}
-
-// 3. Функция, принимающая константный указатель на константные данные (нельзя менять ни ptr, ни *ptr)
-void archiveSettings(const Settings* const ptr) {
-    // TODO: реализуйте функцию
-}
-
-// Код для проверки
-void testConstPointers() {
-    Settings s1(42), s2(123);
-    Settings* ptr1 = &s1;
-    const Settings* ptr2 = &s2;
-    Settings* const ptr3 = &s1;
-    const Settings* const ptr4 = &s2;
+void testConfigManager() {
+    ConfigManager config;
+    const ConfigManager& const_config = config;
     
-    // Эти строки должны компилироваться:
-    printSettings(ptr1);     // Можно передать обычный указатель
-    printSettings(ptr2);     // Можно передать указатель на const
-    rememberSettings(ptr1);  // Можно передать обычный указатель
-    archiveSettings(ptr2);   // Можно передать указатель на const
+    config.setValue("key1", "value1");
     
-    // Эти строки НЕ должны компилироваться:
-    // ptr2->setValue(456);    // Нельзя менять данные через указатель на const
-    // ptr3 = &s2;            // Нельзя менять сам константный указатель
-    // ptr4->setValue(789);   // Нельзя менять данные через константный указатель на const
-    // ptr4 = &s1;            // Нельзя менять сам константный указатель на const
+    // These should compile:
+    const std::string& val1 = const_config.getValue("key1");  // Const reference
+    std::string& val2 = config.getMutableValue("key1");       // Non-const reference
+    std::string val3 = const_config.getValueCopy("key1");     // By value
+    
+    val2 = "modified";  // OK: modifying through non-const reference
+    
+    // These should NOT compile:
+    // const_config.getValue("key1") = "modified";             // Error: cannot modify const reference
+    // std::string& ref = const_config.getValue("key1");       // Error: cannot bind const to non-const
+    // const_config.getMutableValue("key1");                   // Error: cannot call non-const method on const object
 }
 
 int main() {
-    testConstPointers();
+    testConfigManager();
     return 0;
 }
+

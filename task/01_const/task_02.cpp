@@ -1,84 +1,83 @@
 #include <string>
-#include <vector>
-#include <iostream>
 #include <map>
+#include <mutex>
+#include <memory>
+#include <iostream>
 
-// Task 2: Константность в методах класса
-// 
-// Реализуйте класс CacheManager, который:
-// 1. Хранит пары ключ-значение
-// 2. Ведёт статистику обращений к каждому ключу
-// 3. Позволяет получать данные и статистику не изменяя их
-// 4. Имеет методы для модификации данных
+// Task 2: Потокобезопасный const-correct кэш с ленивой инициализацией
 //
-// Примените константность правильно, чтобы:
-// - Защитить данные от случайной модификации
-// - Разрешить модификацию только через специальные методы
-// - Обеспечить максимальную производительность
+// Реализуй ThreadSafeCache, который обеспечивает const-correct доступ к кэшированным
+// данным при сохранении потокобезопасности. Кэш должен использовать mutable для
+// примитивов синхронизации и состояния кэша, но сохранять фактические данные логически константными.
+//
+// Требования:
+// 1. Метод get() должен быть const и потокобезопасным
+// 2. Используй mutable для mutex и состояния кэша (hits/misses)
+// 3. Фактические кэшированные данные НЕ должны быть mutable
+// 4. Метод put() НЕ должен быть const
+// 5. Отслеживание статистики должно работать в const контексте
 
-class CacheManager {
-    std::map<std::string, std::string> data_;
-    mutable std::map<std::string, size_t> access_count_;
-    static const std::string def_result;
-public:
-    // TODO: Реализуйте методы:
+class ThreadSafeCache {
+    // TODO: Design member variables:
+    // - Cache storage (non-mutable)
+    // - Mutex for synchronization (mutable)
+    // - Statistics counters (mutable)
     
-    // 1. Метод для получения значения по ключу
-    // - Должен увеличивать счётчик обращений
-    // - Не должен позволять модифицировать полученное значение
-    const std::string& getValue(const std::string& key) const {
-        // TODO: реализуйте
-        return def_result;
-    } 
+    std::map<std::string, std::string> cache_;
+    mutable std::mutex mutex_;
+    mutable size_t hits_ = 0;
+    mutable size_t misses_ = 0;
 
-    // 2. Метод для получения количества обращений к ключу
-    // - Не должен позволять модифицировать счётчик
-    // - Не должен учитываться как обращение к значению
-    size_t getAccessCount(const std::string& key) const {
-        // TODO: реализуйте
-        return 0;
+public:
+    // TODO: Implement const get() method
+    // Should be thread-safe, update statistics, return const reference
+    const std::string& get(const std::string& key) const {
+        // TODO: implement thread-safe lookup with statistics
+        static const std::string empty;
+        return empty;
     }
-
-    // 3. Метод для установки значения
-    // - Должен позволять изменять данные
-    // - Должен сбрасывать счётчик обращений
-    void setValue(const std::string& key, const std::string& value){
-        // TODO: реализуйте
+    
+    // TODO: Implement non-const put() method
+    // Should be thread-safe, update cache
+    void put(const std::string& key, const std::string& value) {
+        // TODO: implement thread-safe insertion
     }
-
-    // 4. Метод для проверки наличия ключа
-    // - Не должен учитываться как обращение
-    // - Не должен менять состояние объекта
-    bool hasKey(const std::string& key) const {
-        // TODO: реализуйте
-        return false;
+    
+    // TODO: Implement const getStats() method
+    // Should return statistics without modifying cache
+    struct Stats {
+        size_t hits;
+        size_t misses;
+    };
+    
+    Stats getStats() const {
+        // TODO: implement
+        return {0, 0};
     }
+    
+    // TODO: Implement const clear() method - wait, should this be const?
+    // Think about logical constness: does clearing cache change observable state?
+    // Answer: NO, clear() should NOT be const because it modifies cache contents
 };
 
-const std::string CacheManager::def_result = "";
-
-// Код для проверки решения
-void testCacheManager() {
-    CacheManager cache;
+void testThreadSafeCache() {
+    ThreadSafeCache cache;
+    const ThreadSafeCache& const_cache = cache;
     
-    // Базовые операции
-    cache.setValue("key1", "value1");
-    cache.setValue("key2", "value2");
+    cache.put("key1", "value1");
+    cache.put("key2", "value2");
     
-    // Проверка const-correctness
-    const CacheManager& const_cache = cache;
+    // These should compile:
+    const std::string& val1 = const_cache.get("key1");  // Const access
+    auto stats = const_cache.getStats();                // Const access to stats
     
-    std::cout << "key1 exists: " << const_cache.hasKey("key1") << "\n";
-    std::cout << "key1 value: " << const_cache.getValue("key1") << "\n";
-    std::cout << "key1 access count: " << const_cache.getAccessCount("key1") << "\n";
-    
-    // Эти строки НЕ должны компилироваться:
-    // const_cache.setValue("key1", "new_value");        // Ошибка: нельзя модифицировать через const объект
-    // const_cache.getValue("key1").clear();             // Ошибка: нельзя модифицировать полученное значение
-    // const_cache.getAccessCount("key1")++;             // Ошибка: нельзя модифицировать счётчик
+    // These should NOT compile:
+    // const_cache.put("key3", "value3");                // Error: cannot modify through const
+    // const_cache.get("key1") = "modified";              // Error: cannot modify const reference
 }
 
 int main() {
-    testCacheManager();
+    testThreadSafeCache();
     return 0;
 }
+
