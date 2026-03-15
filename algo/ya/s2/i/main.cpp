@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <optional>
+#include <string>
 
 template<typename T>
 class Queue {
@@ -12,11 +13,11 @@ public:
     Queue& operator=(Queue&&) = delete;
 
     Queue(size_t size){
-        data_.reserve(size);
+        data_.resize(size);
     }
 
-    bool Push(T&& in) {
-        if (size_ == data_.size()) {
+    [[nodiscard]] bool Push(T&& in) {
+        if (size_ == data_.size()) [[unlikely]] {
             return false;
         }
     
@@ -49,6 +50,8 @@ public:
 
         l_ = next_l();
 
+        --size_;
+
         return res;
     }
 
@@ -57,6 +60,7 @@ private:
         if (data_.size() == 0) {
             return r_;
         }
+
         return (r_ + 1) % data_.size();
     }
 
@@ -80,9 +84,45 @@ private:
 
 
 int main() {
+    int command_count;
+    size_t size;
+    std::string command;
 
+    getline(std::cin, command);
+    command_count = std::stoi(command); 
 
+    getline(std::cin, command);
+    size = std::stoul(command);
 
+   
+
+    Queue<int> q(size);
+
+    for(int i = 0; i < command_count; ++i) {
+        getline(std::cin, command);
+        
+        if (command == "peek") {
+            auto v = q.Peek();
+            if (v == std::nullopt) {
+                std::cout << "None\n";
+            } else {
+                std::cout << v.value() << "\n";
+            }
+        } else if (command == "size") {
+            std::cout << q.Size() <<"\n";
+        }else if (command == "pop") {
+            auto v = q.Pop();
+            if (v == std::nullopt) {
+                std::cout << "None\n";
+            } else {
+                std::cout << v.value() << "\n";
+            }
+        } else {
+            if (!q.Push(std::stoi(command.substr(5)))) {
+                std::cout << "error\n";
+            }
+        }
+    }    
 
     return 0;
 }
