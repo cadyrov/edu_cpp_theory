@@ -1,12 +1,7 @@
-10
-1
-push 1
+6
+put -66
+put 98
 size
-push 3
 size
-push 1
-pop
-push 1
-pop
-push 3
-push 3
+get
+get
