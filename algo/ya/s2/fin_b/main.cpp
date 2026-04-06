@@ -1,72 +1,96 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <optional>
+#include <sstream>
 
+template<typename T>
+class Stack {
+public:
+    Stack() = default;
+    Stack(Stack&&)=delete;
+    Stack(const Stack&)=delete;
+    Stack& operator +(const Stack&) = delete;
+    Stack&& operator +(Stack&&) = delete;
+    ~Stack(){};
 
-int hysto(std::vector<int> &values) {
-    std::stack<int> stack;
-    std::vector<int> left{};
-    left.reserve(values.size());
-    std::vector<int> right{};
-    right.reserve(values.size());
-
-
-    for (int i = 0; i < values.size(); ++i) {
-        while (!stack.empty() && values[stack.top()] >= values[i]) {
-            stack.pop();
-        }
-
-        if (stack.empty()) {
-            left[i] = -1;
+    void Push(T in) {
+        if (data_.size() == l_) {
+            data_.push_back(in);
         } else {
-            left[i] = stack.top();
+            data_[l_] = in;
         }
 
-        stack.push(i);
+        ++l_;
     }
 
-    stack = std::stack<int>();
-
-    for (int i = values.size() - 1; i >= 0; --i) {
-        while (!stack.empty() && values[stack.top()] >= values[i]) {
-            stack.pop();
+    std::optional<T> Pop() {
+        if (l_ == 0) {
+            return std::nullopt;
         }
 
-        if (stack.empty()) {
-            right[i] = values.size();
-        } else {
-            right[i] = stack.top();
-        }
+        T v = data_[l_-1];
+        --l_;
 
-        stack.push(i);
-    }   
-
-    int max_area = 0;
-    for (int i = 0; i < values.size(); ++i) {
-        int area = values[i] * (right[i] - left[i] - 1);
-        if (area > max_area) {
-            max_area = area;
-        }
+        return v;
     }
 
-    return max_area;
+private:
+    size_t l_ = 0;
+    std::vector<T> data_{};
+};
+
+
+int count(std::string in) {
+        Stack<int> st{};
+        
+        std::istringstream iss(in);
+        std::string word;
+
+        for (;iss >> word;) {
+            if (word == "+") {
+                 int sec = st.Pop().value();
+                 int first = st.Pop().value();
+                st.Push(first + sec);
+                continue;
+            } else if (word == "-") {
+                 int sec = st.Pop().value();
+                 int first = st.Pop().value();
+                st.Push(first - sec);
+                continue;
+            }else if (word == "*") {
+                 int sec = st.Pop().value();
+                 int first = st.Pop().value();
+                st.Push(first * sec);
+                continue;
+            }else if (word == "/") {
+                int sec = st.Pop().value();
+                int first = st.Pop().value();
+
+                if (first * sec < 0 && first % sec != 0) {
+                    st.Push(first / sec - 1);
+                } else {
+                    st.Push(first / sec);
+                }
+
+                continue;
+            }
+
+            st.Push(std::stoi(word));
+        }
+
+    return st.Pop().value();
 }
 
 int main() {
-    std::vector<int> values{};
-    int n;
+    std::string in;
 
-    std::cin >> n;
+    std::getline(std::cin, in);
 
-    values.reserve(n);
     
-    for (int i =0; i < n ;++i) {
-        int value;
-        std::cin >> value;
-        values.push_back(value);
-    }
-
-    std::cout << hysto(values) << " ";
+    
+    std::cout << count(in) << std::endl;
+    
 
     return 0;
 }
