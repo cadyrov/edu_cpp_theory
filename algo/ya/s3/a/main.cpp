@@ -30,5 +30,5 @@ int main() {
 
     brac(0, 0, n, "");
 
-    return 1;
+    return 0;
 }
