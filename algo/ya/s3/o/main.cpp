@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cassert>
 
-long long binDiff(const std::vector<long long>& in, int k) {
+long long binDiff(const std::vector<long long>& in, long long k) {
     auto diff = [](const std::vector<long long>& in, long long df ){
         long long result = 0;
         for (int i = 0; i < in.size() - 1; ++i) {
@@ -35,7 +35,7 @@ long long binDiff(const std::vector<long long>& in, int k) {
 
 int main() {
     int n;
-    int k;
+    long long k;
     std::cin >> n;
 
     std::vector<long long> plates{};
