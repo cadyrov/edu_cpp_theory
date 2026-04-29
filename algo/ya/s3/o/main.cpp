@@ -7,19 +7,17 @@ long long binDiff(const std::vector<long long>& in, long long k) {
     auto diff = [](const std::vector<long long>& in, long long df ){
         long long result = 0;
         for (int i = 0; i < in.size() - 1; ++i) {
-            // Проверяем переполнение перед сложением
-            long long target = in[i] + df;
-            auto it = std::upper_bound(in.begin() + i + 1, in.end(), target);
-            result += std::distance(in.begin() + i + 1, it);
+            auto it = std::upper_bound(in.begin() + i + 1, in.end(), in[i] + df);
+            result += (it - (in.begin() + i + 1));
         }
         return result;
     };
 
-    long long min_diff = 0;
+    long long min_diff = 0; 
     long long max_diff = in[in.size() - 1] - in[0];
 
     while (min_diff < max_diff) {
-        long long mid_diff = min_diff + (max_diff - min_diff) / 2;
+        long long mid_diff = min_diff + ((max_diff - min_diff) >> 1);
         long long count = diff(in, mid_diff);
 
         if (count >= k) {
