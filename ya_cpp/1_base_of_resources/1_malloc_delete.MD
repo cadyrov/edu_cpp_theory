@@ -271,13 +271,106 @@ int main() {
 - `new[]` создает все элементы массива;
 - `delete[]` уничтожает все элементы массива и освобождает память.
 
+## Несовместимые пары
+
+Правильные пары:
+
+```cpp
+std::malloc(...)       -> std::free(...)
+::operator new(...)   -> ::operator delete(...)
+new T(...)            -> delete
+new T[n]              -> delete[]
+```
+
+Так нельзя:
+
+```cpp
+int* p = new int(42);
+std::free(p); // undefined behavior
+```
+
+```cpp
+int* p = (int*)std::malloc(sizeof(int));
+delete p; // undefined behavior
+```
+
+```cpp
+User* users = new User[3];
+delete users; // undefined behavior, нужен delete[]
+```
+
+У `new[]` может быть служебная область перед массивом: array cookie/count.
+
+Упрощенно:
+
+```text
+[count][User][User][User]
+        ^
+        users
+```
+
+`delete[]` знает, что нужно уничтожить все элементы массива.
+
+`delete` думает, что перед ним один объект.
+
+## Undefined behavior
+
+Undefined behavior - ситуация, где C++ ничего не гарантирует.
+
+Код может:
+
+- работать;
+- падать;
+- печатать мусор;
+- ломаться только иногда.
+
+Примеры:
+
+```cpp
+delete p;
+delete p; // двойное освобождение
+```
+
+```cpp
+delete p;
+std::cout << *p; // использование после delete
+```
+
+## new (std::nothrow)
+
+Обычный `new` при ошибке бросает `std::bad_alloc`.
+
+```cpp
+int* p = new int(42);
+```
+
+`new (std::nothrow)` при ошибке возвращает `nullptr`.
+
+```cpp
+#include <new>
+
+int main() {
+    int* p = new (std::nothrow) int(42);
+    if (p == nullptr) {
+        return 1;
+    }
+
+    delete p;
+}
+```
+
 ## Саммари
 
 - `malloc/free` работают с сырыми байтами.
 - `new/delete` работают с C++-объектами.
 - `new` выделяет память и создает объект.
 - `delete` уничтожает объект и освобождает память.
+- `new[]` создает массив, освобождать нужно только через `delete[]`.
+- У `new[]` может быть служебный array cookie/count перед массивом.
+- Нельзя смешивать пары: `malloc/free`, `new/delete`, `new[]/delete[]`.
 - `malloc` при ошибке возвращает `nullptr`.
 - `new` и `::operator new` при ошибке бросают `std::bad_alloc`.
+- `new (std::nothrow)` при ошибке возвращает `nullptr`.
 - Забыл `delete` - получил утечку памяти.
 - Использовал указатель после `delete` - получил undefined behavior.
+- Undefined behavior означает, что стандарт C++ ничего не гарантирует.
