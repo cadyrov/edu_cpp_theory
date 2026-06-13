@@ -188,6 +188,81 @@ int main() {
 - `new` выделяет память и создает объект;
 - `delete` вызывает деструктор и освобождает память.
 
+## Размещающая форма new
+
+Размещающая форма `new` = placement new.
+
+```cpp
+new (address) T(args...);
+```
+
+Она не выделяет память. Она только создает объект по готовому адресу.
+
+```cpp
+#include <cstdlib>
+#include <new>
+
+struct User {
+    User(int id) {}
+    ~User() {}
+};
+
+int main() {
+    void* memory = std::malloc(sizeof(User));
+    if (memory == nullptr) {
+        return 1;
+    }
+
+    User* user = new (memory) User(42);
+
+    user->~User();
+    std::free(memory);
+}
+```
+
+Правило: если объект создан через placement new, деструктор вызывается вручную.
+
+```cpp
+user->~User();
+```
+
+`delete user` здесь нельзя, потому что память была выделена не обычным `new`.
+
+## Placement new и выравнивание
+
+Память должна быть:
+
+- достаточно большой;
+- правильно выровненной.
+
+Так лучше не делать:
+
+```cpp
+char buffer[sizeof(User)];
+User* user = new (buffer) User(42); // может быть неправильное выравнивание
+```
+
+Корректнее:
+
+```cpp
+#include <new>
+
+struct User {
+    User(int id) {}
+    ~User() {}
+};
+
+int main() {
+    alignas(User) char buffer[sizeof(User)];
+
+    User* user = new (buffer) User(42);
+
+    user->~User();
+}
+```
+
+`alignas(User)` говорит: выровнять буфер так, чтобы в нем можно было хранить `User`.
+
 ## Корректная обработка массива
 
 ### 1. malloc/free
@@ -365,6 +440,10 @@ int main() {
 - `new/delete` работают с C++-объектами.
 - `new` выделяет память и создает объект.
 - `delete` уничтожает объект и освобождает память.
+- Placement new создает объект в уже выделенной памяти.
+- Placement new не освобождает память и не выделяет ее.
+- После placement new деструктор обычно вызывается вручную.
+- Для стекового буфера под объект нужно учитывать выравнивание: `alignas(T)`.
 - `new[]` создает массив, освобождать нужно только через `delete[]`.
 - У `new[]` может быть служебный array cookie/count перед массивом.
 - Нельзя смешивать пары: `malloc/free`, `new/delete`, `new[]/delete[]`.
