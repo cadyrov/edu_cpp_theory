@@ -1,53 +1,23 @@
-#include <cstring>
-#include <iostream>
+#include <string>
 #include <utility>
+#include <vector>
 
-class Buffer {
-    char* data_ = nullptr;
-    std::size_t size_ = 0;
+class Bag {
+    std::vector<std::string> data_;
 
 public:
-    explicit Buffer(std::size_t size)
-        : data_(new char[size]), size_(size) {
-        std::memset(data_, 0, size_);
+    void add(std::string&& s) {
+        data_.push_back(std::move(s));
     }
 
-    ~Buffer() {
-        delete[] data_;
+    template <typename T>
+    void add_any(T&& s) {
+        data_.push_back(std::forward<T>(s));
     }
 
-    Buffer(const Buffer& other)
-        : data_(new char[other.size_]), size_(other.size_) {
-        std::memcpy(data_, other.data_, size_);
-    }
-
-    Buffer& operator=(const Buffer& other) {
-        if (this == &other) {
-            return *this;
-        }
-
-        delete[] data_;
-        data_ = new char[other.size_];
-        size_ = other.size_;
-        std::memcpy(data_, other.data_, size_);
-        return *this;
-    }
-
-    Buffer(Buffer&& other) noexcept
-        : data_(other.data_), size_(other.size_) {
-
-    }
-
-    Buffer& operator=(Buffer&& other) noexcept {
-        size_ = other.size_;
-        delete[] data_;
-
-        data_ = std::move(other.data_);
-
-        return *this;
-    }
-
-    std::size_t size() const {
-        return size_;
+    std::string take_last() {
+        std::string result = data_.back();
+        data_.pop_back();
+        return result;
     }
 };
