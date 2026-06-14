@@ -411,6 +411,22 @@ delete p;
 std::cout << *p; // использование после delete
 ```
 
+`delete nullptr` безопасен:
+
+```cpp
+int* p = nullptr;
+
+delete p; // корректно, ничего не делает
+```
+
+Поэтому такой код корректен:
+
+```cpp
+delete p;
+p = nullptr;
+delete p; // корректно, это delete nullptr
+```
+
 ## new (std::nothrow)
 
 Обычный `new` при ошибке бросает `std::bad_alloc`.
@@ -452,4 +468,5 @@ int main() {
 - `new (std::nothrow)` при ошибке возвращает `nullptr`.
 - Забыл `delete` - получил утечку памяти.
 - Использовал указатель после `delete` - получил undefined behavior.
+- `delete nullptr` корректен и ничего не делает.
 - Undefined behavior означает, что стандарт C++ ничего не гарантирует.
