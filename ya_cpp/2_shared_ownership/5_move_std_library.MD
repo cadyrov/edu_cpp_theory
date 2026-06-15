@@ -23,6 +23,7 @@ std::move(x);
 ```cpp
 #include <iostream>
 #include <memory>
+#include <utility>
 
 int main() {
     auto p1 = std::make_unique<int>(42);
@@ -49,6 +50,7 @@ int main() {
 ```cpp
 #include <iostream>
 #include <memory>
+#include <utility>
 
 int main() {
     auto p1 = std::make_shared<int>(42);
@@ -238,6 +240,7 @@ auto b = std::move(a);
 ```cpp
 #include <iostream>
 #include <memory>
+#include <utility>
 #include <vector>
 
 int main() {

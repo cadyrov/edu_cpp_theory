@@ -22,6 +22,7 @@ void consume(std::unique_ptr<int> p);
 ```cpp
 #include <iostream>
 #include <memory>
+#include <utility>
 
 void print(const int* p) {
     std::cout << *p << '\n';
@@ -218,6 +219,7 @@ int* raw = nullptr;
 ```cpp
 #include <iostream>
 #include <memory>
+#include <utility>
 
 void print(const int* p) {
     std::cout << *p << '\n';

@@ -31,6 +31,7 @@ struct Config {
 #include <atomic>
 #include <memory>
 #include <string>
+#include <utility>
 
 struct Config {
     std::string host;
