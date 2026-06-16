@@ -258,6 +258,249 @@ a = std::move(b);
 
 `b` стал пустым.
 
+## Пример 8: где копирование, а где перемещение
+
+Именованная переменная — это lvalue.
+
+```cpp
+#include <iostream>
+#include <utility>
+
+struct X {
+    X() {
+        std::cout << "default ctor\n";
+    }
+
+    X(const X&) {
+        std::cout << "copy ctor\n";
+    }
+
+    X(X&&) noexcept {
+        std::cout << "move ctor\n";
+    }
+};
+
+int main() {
+    X a;
+
+    X b = a;
+    X c = std::move(a);
+}
+```
+
+Вывод:
+
+```text
+default ctor
+copy ctor
+move ctor
+```
+
+Разбор:
+
+```cpp
+X b = a;
+```
+
+`a` — именованный объект, значит это lvalue. Выбирается copy constructor.
+
+```cpp
+X c = std::move(a);
+```
+
+`std::move(a)` превращает выражение в rvalue. Выбирается move constructor.
+
+## Пример 9: copy может быть удален
+
+```cpp
+#include <utility>
+
+struct X {
+    X() = default;
+    X(const X&) = delete;
+    X(X&&) noexcept = default;
+};
+
+int main() {
+    X a;
+
+    X b = a;            // ошибка: copy constructor удален
+    X c = std::move(a); // ok: move constructor есть
+}
+```
+
+Если копирование запрещено, обычная передача lvalue не сработает.
+
+Чтобы передать владение, нужен `std::move`.
+
+## Пример 10: move-only тип
+
+Тип называется move-only, если его нельзя копировать, но можно перемещать.
+
+```cpp
+#include <utility>
+
+class Buffer {
+public:
+    explicit Buffer(int size)
+        : size_(size), data_(new int[size]) {
+    }
+
+    ~Buffer() {
+        delete[] data_;
+    }
+
+    Buffer(const Buffer&) = delete;
+    Buffer& operator=(const Buffer&) = delete;
+
+    Buffer(Buffer&& other) noexcept
+        : size_(other.size_), data_(other.data_) {
+        other.size_ = 0;
+        other.data_ = nullptr;
+    }
+
+    Buffer& operator=(Buffer&& other) noexcept {
+        if (this != &other) {
+            delete[] data_;
+
+            size_ = other.size_;
+            data_ = other.data_;
+
+            other.size_ = 0;
+            other.data_ = nullptr;
+        }
+
+        return *this;
+    }
+
+private:
+    int size_ = 0;
+    int* data_ = nullptr;
+};
+```
+
+`std::unique_ptr` — стандартный пример move-only типа.
+
+```cpp
+#include <memory>
+
+auto p1 = std::make_unique<int>(42);
+auto p2 = p1;            // ошибка
+auto p3 = std::move(p1); // ok
+```
+
+## Пример 11: что создается по умолчанию
+
+Компилятор может сам объявлять специальные функции класса:
+
+- default constructor;
+- destructor;
+- copy constructor;
+- copy assignment;
+- move constructor;
+- move assignment.
+
+Но пользовательские специальные функции влияют друг на друга.
+
+```cpp
+#include <utility>
+
+struct X {
+    X() = default;
+    X(X&&) noexcept = default;
+};
+
+int main() {
+    X a;
+
+    X b = a;            // ошибка: copy constructor недоступен
+    X c = std::move(a); // ok
+}
+```
+
+Если явно объявить move constructor или move assignment, объект обычно становится некопируемым, если явно не объявить копирование.
+
+Для владеющего ресурса это часто хорошо: копирование либо запрещают, либо пишут вручную глубокое копирование.
+
+## Пример 12: deleted move не заменяется copy
+
+```cpp
+#include <utility>
+
+struct X {
+    X() = default;
+    X(const X&) = default;
+    X(X&&) = delete;
+};
+
+int main() {
+    X a;
+
+    X b = std::move(a); // ошибка
+}
+```
+
+`std::move(a)` дает rvalue.
+
+Для rvalue лучшим кандидатом становится move constructor.
+
+Но он удален:
+
+```cpp
+X(X&&) = delete;
+```
+
+Компилятор не "откатывается" к copy constructor, если лучший кандидат найден, но удален.
+
+## Пример 13: возврат из функции и NRVO
+
+NRVO — Named Return Value Optimization.
+
+Компилятор может создать локальный возвращаемый объект сразу в месте результата.
+
+```cpp
+#include <iostream>
+
+struct X {
+    X() {
+        std::cout << "default ctor\n";
+    }
+
+    X(const X&) {
+        std::cout << "copy ctor\n";
+    }
+
+    X(X&&) noexcept {
+        std::cout << "move ctor\n";
+    }
+};
+
+X make() {
+    X x;
+    return x;
+}
+
+int main() {
+    X a = make();
+}
+```
+
+В обычной современной сборке часто будет:
+
+```text
+default ctor
+```
+
+Без NRVO мог бы понадобиться move constructor.
+
+Не стоит писать так:
+
+```cpp
+return std::move(x);
+```
+
+`std::move(x)` часто мешает NRVO, потому что возвращается уже не имя локальной переменной, а выражение.
+
 ## Частые ошибки
 
 ### Использовать объект после move как будто он прежний
@@ -288,3 +531,10 @@ std::move(x);
 - `swap` обменивает состояния объектов.
 - Move constructor создает новый объект из старого.
 - Move assignment заменяет ресурс уже существующего объекта.
+- Именованная переменная — lvalue, даже если ее тип `T&&`.
+- `std::move(x)` делает выражение rvalue, поэтому может выбрать move constructor или move assignment.
+- Если copy constructor удален, `X b = a;` не скомпилируется.
+- Если move constructor есть, а copy явно не объявлен, тип часто становится move-only.
+- Если лучший кандидат удален, например `X(X&&) = delete`, компиляция падает.
+- NRVO может убрать лишний move/copy при `return x;`.
+- `return std::move(x);` для локальной переменной обычно не нужен и может помешать NRVO.
