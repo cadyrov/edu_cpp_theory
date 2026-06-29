@@ -1,0 +1,14 @@
+Представьте, что для выделения памяти в одной очень старой библиотеке используют malloc и free. Помогите владельцам библиотеки обезопасить код — перепишите код ниже с помощью std::make_unique.
+Прекод:
+
+```cpp
+const std::size_t size = 10;
+auto *pArr = static_cast<int *>(std::malloc(size * sizeof(int)));
+auto *pValue = static_cast<double *>(std::malloc(sizeof(double)));
+std::free(pValue);
+std::free(pArr); 
+```
+
+Подсказки
+
+Убедитесь, что std::make_unique для массива принимает только количество элементов и не использует sizeof.
