@@ -60,6 +60,71 @@ int main() {
 }
 ```
 
+### Пример 4: как читать вывод типа
+
+Вывод `T` зависит от формы параметра.
+
+```cpp
+template <typename T>
+void by_value(T x);        // копия
+
+template <typename T>
+void by_ref(T& x);         // lvalue-ссылка
+
+template <typename T>
+void by_const_ref(const T& x);
+
+template <typename T>
+void by_forward_ref(T&& x);
+
+template <typename T>
+void by_pointer(T* x);
+```
+
+Основные правила:
+
+- `T x` убирает ссылку, верхнеуровневый `const`, массив превращает в указатель.
+- `T& x` сохраняет `const` объекта и массив, но сама ссылка не входит в `T`.
+- `const T& x` не включает внешний `const` в `T`.
+- `T&& x` в шаблоне является forwarding reference: для lvalue `T` становится ссылкой, для rvalue - обычным типом.
+- `T* x` выводит `T` как тип под указателем.
+
+```cpp
+template <typename T>
+void foo(T x) {}
+
+const int a = 10;
+foo(a); // T = int
+
+int arr[3]{};
+foo(arr); // T = int*
+```
+
+```cpp
+template <typename T>
+void foo(T& x) {}
+
+const int a = 10;
+foo(a); // T = const int
+
+int arr[3]{};
+foo(arr); // T = int[3]
+```
+
+`const T&` нужно читать как "ссылка на const-версию всего `T`".
+
+```cpp
+template <typename T>
+void foo(const T& x) {}
+
+int value = 10;
+int* const p = &value;
+
+foo(p); // T = int*, параметр int* const&
+```
+
+Если `T = int*`, то `const T&` дает `int* const&`, а не `const int*&`.
+
 ## Подводные камни
 
 Шаблон должен быть виден в месте использования. Поэтому шаблоны обычно пишут в `.hpp`.
@@ -101,5 +166,6 @@ max_value<double>(1, 2.5);
 - `typename` и `class` в параметрах шаблона почти одно и то же.
 - Тип часто выводится из аргументов.
 - Если тип нельзя вывести, его указывают явно.
+- Форма параметра (`T`, `T&`, `const T&`, `T&&`, `T*`) определяет правила вывода `T`.
 - Шаблоны обычно размещают в заголовочных файлах.
 - Ошибки в шаблоне часто появляются только при конкретном использовании.
