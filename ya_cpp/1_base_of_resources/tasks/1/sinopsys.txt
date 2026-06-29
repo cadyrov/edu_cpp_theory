@@ -1,0 +1,124 @@
+Создайте две переменные, чтобы отслеживать, сколько памяти выделяют и освобождают операторы new/delete.
+Создайте две переменные, чтобы отслеживать, сколько памяти выделяют и освобождают операторы new[]/delete[].
+Добавьте функцию ProperArrayManagement(), которая будет создавать массив из пяти объектов HeavyObject в динамической памяти и правильно его удалять.
+Добавьте функцию ProperMemoryManagement(), которая будет создавать один объект HeavyObject в динамической памяти и правильно его удалять.
+Реализуйте шесть функций для выделения и освобождения памяти.
+Запустите программу и добавьте в std::print в main число, которое библиотека jemalloc указала как количество объектов в строке Leak approximation summary:
+
+```cpp
+#include <cstdlib>
+
+struct HeavyObject {
+    int32_t data[1000];
+};
+
+// ===== Ваш код здесь =====
+
+//
+// Функции, не вызывающие утечки памяти
+//
+
+void *operator new(std::size_t sz);
+
+void operator delete(void *ptr) noexcept;
+void operator delete(void *ptr, std::size_t sz) noexcept;
+
+void *operator new[](std::size_t sz);
+
+void operator delete[](void *ptr) noexcept;
+void operator delete[](void *ptr, std::size_t sz) noexcept;
+
+// =========================
+
+//
+// Функции утечки памяти
+//
+void LeakArrayMemory() { new HeavyObject[10]; }
+void LeakSomeMemory() { new HeavyObject{}; }
+
+//
+// Функции для теста 2
+//
+void CatchMeIfYouCanRecursively(unsigned int depth) {
+    if (depth <= 0)
+        return;
+
+    HeavyObject *obj = new HeavyObject{};
+
+    HeavyObject *temp = new HeavyObject{};
+
+    if (depth % 2 == 0) {
+        ProperMemoryManagement();
+    }
+
+    if (depth % 3 == 0) {
+        LeakSomeMemory();
+    }
+
+    if (depth % 7 == 0) {
+        ProperArrayManagement();
+    }
+
+    if (depth % 11 == 0) {
+        LeakArrayMemory();
+    }
+
+    CatchMeIfYouCanRecursively(depth - 1);
+    delete obj;
+}
+
+//
+// Функции для теста 1
+//
+void MemoryLeaksWithFor(HeavyObject *templateObject) {
+    HeavyObject *array1 = new HeavyObject[10];
+
+    for (std::size_t sz = 0; sz < 10; ++sz) {
+        HeavyObject *array2 = new HeavyObject[10];
+        LeakSomeMemory();
+        ProperMemoryManagement();
+        delete[] array2;
+    }
+
+    delete templateObject;
+    delete[] array1;
+}
+
+void CatchMeIfYouCan() {
+    HeavyObject *obj = new HeavyObject{};
+
+    ProperMemoryManagement();
+
+    MemoryLeaksWithFor(obj);
+}
+
+int main(int argc, char **argv) {
+    // Простая утечка памяти
+    for (std::size_t sz = 0; sz < 100; ++sz) {
+        LeakSomeMemory();
+    }
+
+    // Несколько вложенных функций с циклом
+    CatchMeIfYouCan();
+
+    // Несколько вложенных функций с рекурсией
+    CatchMeIfYouCanRecursively(42);
+
+    std::print("Number of allocations:   {}\n"
+               "Number of deallocations: {}\n"
+               "Number of array allocations:   {}\n"
+               "Number of array deallocations: {}\n\n"
+               "Number of leaks in total: {}\n\n",
+               numAllocs, numDeallocs, numArrayAllocs, numArrayDeallocs,
+               numAllocs - numDeallocs + numArrayAllocs - numArrayDeallocs);
+
+    std::print("Jemalloc approx. number of leaks:   {}\n", 0);
+}
+```
+
+```
+Проверьте на cppreference.com, какой заголовочный файл нужно добавить для использования std::print.
+Убедитесь, что вы не забыли подключить заголовочный файл jemalloc/jemalloc.h библиотеки jemalloc.
+Не добавляйте префикс std:: к malloc и free, чтобы использовать версию из библиотеки jemalloc.
+Не забудьте, что при вводе ответа надо отбросить дробную часть числа без округления.
+```

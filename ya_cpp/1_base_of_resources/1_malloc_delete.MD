@@ -450,6 +450,274 @@ int main() {
 }
 ```
 
+## Переопределение operator new/delete
+
+`operator new` и `operator delete` можно переопределять.
+
+Важно: это не замена ключевых слов `new` и `delete`.
+
+Ключевое слово `new` все равно делает две операции:
+
+1. вызывает подходящий `operator new`, чтобы выделить память;
+2. вызывает конструктор объекта.
+
+Ключевое слово `delete` тоже делает две операции:
+
+1. вызывает деструктор объекта;
+2. вызывает подходящий `operator delete`, чтобы освободить память.
+
+То есть переопределяется только часть про выделение и освобождение памяти.
+
+## Глобальное переопределение
+
+Можно заменить глобальные функции выделения памяти:
+
+```cpp
+#include <cstdlib>
+#include <new>
+
+void* operator new(std::size_t size) {
+    if (void* p = std::malloc(size)) {
+        return p;
+    }
+    throw std::bad_alloc();
+}
+
+void operator delete(void* p) noexcept {
+    std::free(p);
+}
+```
+
+Теперь обычный `new T` будет использовать этот `operator new`.
+
+Пример:
+
+```cpp
+struct User {
+    User(int id) {}
+    ~User() {}
+};
+
+int main() {
+    User* user = new User(42);
+
+    delete user;
+}
+```
+
+Схема:
+
+```text
+new User(42)
+    -> operator new(sizeof(User))
+    -> User::User(42)
+
+delete user
+    -> User::~User()
+    -> operator delete(user)
+```
+
+## Переопределение для класса
+
+Чаще `operator new/delete` задают не глобально, а для конкретного класса.
+
+```cpp
+#include <cstdlib>
+#include <new>
+
+struct User {
+    int id;
+
+    User(int id)
+        : id(id) {
+    }
+
+    static void* operator new(std::size_t size) {
+        if (void* p = std::malloc(size)) {
+            return p;
+        }
+        throw std::bad_alloc();
+    }
+
+    static void operator delete(void* p) noexcept {
+        std::free(p);
+    }
+};
+
+int main() {
+    User* user = new User(42);
+
+    delete user;
+}
+```
+
+Для `new User(42)` сначала ищется `User::operator new`.
+
+Если его нет, используется глобальный `::operator new`.
+
+## Если конструктор бросил исключение
+
+Если `operator new` выделил память, но конструктор бросил исключение, C++ сам вызовет подходящий `operator delete`.
+
+```cpp
+#include <cstdlib>
+#include <new>
+#include <stdexcept>
+
+struct User {
+    User() {
+        throw std::runtime_error("fail");
+    }
+
+    static void* operator new(std::size_t size) {
+        if (void* p = std::malloc(size)) {
+            return p;
+        }
+        throw std::bad_alloc();
+    }
+
+    static void operator delete(void* p) noexcept {
+        std::free(p);
+    }
+};
+
+int main() {
+    try {
+        User* user = new User();
+    } catch (...) {
+    }
+}
+```
+
+Память не утечет: конструктор не завершился, но выделенная память будет освобождена.
+
+## operator new[]/delete[]
+
+Для массивов нужны отдельные функции:
+
+```cpp
+#include <cstdlib>
+#include <new>
+
+struct User {
+    static void* operator new[](std::size_t size) {
+        if (void* p = std::malloc(size)) {
+            return p;
+        }
+        throw std::bad_alloc();
+    }
+
+    static void operator delete[](void* p) noexcept {
+        std::free(p);
+    }
+};
+
+int main() {
+    User* users = new User[3];
+
+    delete[] users;
+}
+```
+
+`new[]` ищет `operator new[]`.
+
+`delete[]` ищет `operator delete[]`.
+
+`operator new` и `operator new[]` - разные функции.
+
+## Sized delete
+
+У `operator delete` может быть версия с размером:
+
+```cpp
+#include <cstdlib>
+#include <cstddef>
+
+void operator delete(void* p, std::size_t size) noexcept {
+    std::free(p);
+}
+```
+
+Компилятор может выбрать такую форму, если размер удаляемого объекта известен.
+
+Для класса это выглядит так:
+
+```cpp
+#include <cstdlib>
+#include <cstddef>
+
+struct User {
+    static void operator delete(void* p, std::size_t size) noexcept {
+        std::free(p);
+    }
+};
+```
+
+Параметр `size` полезен для своих аллокаторов и пулов памяти.
+
+## Aligned new/delete
+
+Для типов с большим выравниванием может использоваться форма с `std::align_val_t`.
+
+```cpp
+#include <cstdlib>
+#include <new>
+
+struct alignas(64) CacheLine {
+    int value;
+};
+
+void* operator new(std::size_t size, std::align_val_t alignment) {
+    void* p = nullptr;
+    std::size_t align = static_cast<std::size_t>(alignment);
+
+    if (posix_memalign(&p, align, size) == 0) {
+        return p;
+    }
+    throw std::bad_alloc();
+}
+
+void operator delete(void* p, std::align_val_t) noexcept {
+    std::free(p);
+}
+```
+
+Обычно вручную это не пишут. Важно знать, что для over-aligned типов есть отдельная форма `operator new/delete`.
+
+## Placement operator new
+
+Placement new тоже выглядит как `operator new`, но не выделяет память.
+
+Стандартная форма:
+
+```cpp
+void* operator new(std::size_t size, void* p) noexcept;
+```
+
+Именно она используется здесь:
+
+```cpp
+struct User {
+    User(int id) {}
+    ~User() {}
+};
+
+alignas(User) char buffer[sizeof(User)];
+
+User* user = new (buffer) User(42);
+```
+
+Такую стандартную placement-форму обычно не переопределяют.
+
+## Правила
+
+- Если переопределяешь `operator new`, рядом нужен совместимый `operator delete`.
+- Для массивов отдельно: `operator new[]` и `operator delete[]`.
+- `operator new` должен вернуть правильно выровненную память или бросить исключение.
+- Обычный throwing `operator new` не должен возвращать `nullptr`.
+- `operator delete` должен быть `noexcept`.
+- Нельзя смешивать разные способы выделения и освобождения памяти.
+
 ## Саммари
 
 - `malloc/free` работают с сырыми байтами.
@@ -466,6 +734,13 @@ int main() {
 - `malloc` при ошибке возвращает `nullptr`.
 - `new` и `::operator new` при ошибке бросают `std::bad_alloc`.
 - `new (std::nothrow)` при ошибке возвращает `nullptr`.
+- `operator new/delete` можно переопределять глобально или для класса.
+- Ключевое слово `new` вызывает `operator new`, а потом конструктор.
+- Ключевое слово `delete` вызывает деструктор, а потом `operator delete`.
+- Для массивов используются отдельные `operator new[]/delete[]`.
+- Если конструктор бросил исключение, C++ вызовет подходящий `operator delete`.
+- `operator delete` может получать размер объекта: sized delete.
+- Для over-aligned типов есть формы с `std::align_val_t`.
 - Забыл `delete` - получил утечку памяти.
 - Использовал указатель после `delete` - получил undefined behavior.
 - `delete nullptr` корректен и ничего не делает.

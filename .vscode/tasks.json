@@ -3,12 +3,16 @@
         {
             "type": "cppbuild",
             "label": "C/C++: clang build active file",
-            "command": "/usr/bin/clang",
+            "command": "clang++",
             "args": [
                 "-fcolor-diagnostics",
                 "-fansi-escape-codes",
+                "-std=c++23",
                 "-g",
                 "${file}",
+                "-I/opt/homebrew/Cellar/jemalloc/5.3.0/include/jemalloc",
+                "-L/opt/homebrew/Cellar/jemalloc/5.3.0/lib",
+                "-ljemalloc",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}"
             ],
