@@ -1,0 +1,29 @@
+Скопируйте код ниже к себе и выподлните задания:
+Напишите цикл, в котором вы будете конструировать объект класса Image размером 256x256 пикселей. 
+В цикле используйте std::addressof и new-expression.
+В строке, следующей за new-expression, разрушьте созданный объект.
+Найдите утечку памяти и избавьтесь от неё.
+Прекод
+
+```cpp
+class Image {
+public:
+    Image(unsigned int width, unsigned int height) : width_(width), height_(height) {}
+    void operator&() const = delete;
+
+private:
+    unsigned int width_;
+    unsigned int height_;
+};
+
+int main() {
+    const std::size_t len = 5;
+    auto *arrPtrPN = (Image *)std::malloc(sizeof(Image) * len);
+    // Ваш код здесь
+    return 0;
+} 
+```
+
+Для каждого элемента массива используйте std::addressof.
+Помните, что new-expression требует ручного вызова деструктора.
+Проверьте, корректно ли завершена работа с arrPtrPN.

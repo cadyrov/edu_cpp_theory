@@ -1,0 +1,42 @@
+Измените тип хранилища storage_ на std::byte и укажите ему правильное выравнивание.
+Реализуйте метод GetValidStoragePtr с помощью reinterpret_cast и std::addressof.
+Реализуйте освобождение памяти в деструкторе с помощью std::destroy_n.
+Реализуйте конструирование объекта в контейнере в методе EmplaceBack с помощью std::construct_at.
+Учтите, что адрес объекта для конструирования в методе EmplaceBack нужно вычислять с помощью метода GetValidStoragePtr() 
+и значения поля numElements_.
+
+
+```cpp
+class Image {
+public:
+    Image(unsigned int width, unsigned int height) : width_(width), height_(height) {}
+    void operator&() const = delete;
+
+private:
+    unsigned int width_;
+    unsigned int height_;
+};
+
+class VectorOfImages {
+public:
+    ~VectorOfImages() { /* Ваш код здесь */ }
+    Image *GetValidStoragePtr() { /* Ваш код здесь */ }
+    void EmplaceBack(unsigned int width, unsigned int height) {
+        if (numElements_ >= maxSize_) {
+            throw std::bad_alloc{};
+        }
+        // Ваш код здесь
+        ++numElements_;
+    }
+
+private:
+    unsigned int numElements_ = 0;
+    static const unsigned int maxSize_ = 20;
+    char storage_[maxSize_ * sizeof(Image)];  // Ваш код здесь
+}; 
+```
+
+
+Чтобы реализовать метод получения корректного адреса хранилища изображений, используйте reinterpret_cast и std::addressof.
+Чтобы создать объект в хранилище, примените GetValidStoragePtr().
+Чтобы правильно выровнять хранилище изображений, используйте alignas, alignof.
