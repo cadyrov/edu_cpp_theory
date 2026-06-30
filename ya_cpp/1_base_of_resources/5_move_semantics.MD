@@ -20,6 +20,61 @@ std::string b = std::move(a);
 
 Реальное перемещение делает move constructor или move assignment.
 
+## Что считается rvalue
+
+Rvalue - это выражение, у которого нет устойчивого имени-места в программе или которое явно разрешено использовать как временное.
+
+Объектами rvalue являются:
+
+- `this` - выражение-указатель внутри метода класса;
+- значения перечислений и enumerator-ы;
+- lambda expression:
+
+```cpp
+[](int a) { return a * 2; }
+```
+
+- вызовы функций, которые не возвращают ссылки:
+
+```cpp
+std::string getStr();
+
+auto s = getStr();
+auto joined = str1 + str2;
+```
+
+- вызовы функций, которые возвращают `T&&`:
+
+```cpp
+std::string&& getStrRefRef();
+
+auto s = std::move(getStrRefRef());
+```
+
+- литералы, кроме строковых:
+
+```cpp
+42;
+true;
+nullptr;
+```
+
+Строковый литерал - исключение: `"hello"` имеет тип массива `const char[N]` и является lvalue.
+
+- приведения к rvalue-ссылке:
+
+```cpp
+int value = 42;
+static_cast<int&&>(value);
+```
+
+- вызовы конструкторов:
+
+```cpp
+std::string("hello");
+Buffer(10);
+```
+
 ## Зачем нужно
 
 Для ресурсов копирование часто:
@@ -222,6 +277,102 @@ int main() {
 
 Для владеющих типов это часто дешевле и безопаснее копирования.
 
+## Пример 6.1: принудительное перемещение
+
+Именованный объект - это lvalue, даже если его тип `T&&`.
+
+Чтобы принудительно выбрать move constructor или move assignment, используют `std::move`:
+
+```cpp
+#include <memory>
+#include <utility>
+
+int main() {
+    auto source = std::make_unique<int>(42);
+
+    auto target = std::move(source);
+}
+```
+
+`std::move(source)` не перемещает сам. Он только превращает выражение в rvalue, после чего выбранная операция перемещения забирает состояние.
+
+## Пример 6.2: Swap-And-Iterate
+
+Swap-And-Iterate - прием: быстро обменять внутренний контейнер с локальным пустым контейнером, а потом обходить уже локальную копию состояния.
+
+```cpp
+#include <functional>
+#include <utility>
+#include <vector>
+
+class Queue {
+public:
+    void Add(std::function<void()> task) {
+        tasks_.push_back(std::move(task));
+    }
+
+    void RunAll() {
+        std::vector<std::function<void()>> tasks;
+        std::swap(tasks, tasks_);
+
+        for (auto& task : tasks) {
+            task();
+        }
+    }
+
+private:
+    std::vector<std::function<void()>> tasks_;
+};
+```
+
+После `std::swap(tasks, tasks_)` объект `Queue` сразу остается с пустым `tasks_`, а старая работа выполняется отдельно.
+
+Это полезно, когда во время обхода могут добавляться новые элементы или когда нужно не держать внутреннее состояние занятым во время долгой обработки.
+
+## Пример 6.3: std::exchange
+
+`std::exchange` делает код перемещения короче и выразительнее: вернуть старое значение, а в объект записать новое.
+
+```cpp
+#include <utility>
+
+class Buffer {
+public:
+    explicit Buffer(int size)
+        : size_(size), data_(new int[size]) {
+    }
+
+    ~Buffer() {
+        delete[] data_;
+    }
+
+    Buffer(const Buffer&) = delete;
+    Buffer& operator=(const Buffer&) = delete;
+
+    Buffer(Buffer&& other) noexcept
+        : size_(std::exchange(other.size_, 0)),
+          data_(std::exchange(other.data_, nullptr)) {
+    }
+
+    Buffer& operator=(Buffer&& other) noexcept {
+        if (this != &other) {
+            delete[] data_;
+
+            size_ = std::exchange(other.size_, 0);
+            data_ = std::exchange(other.data_, nullptr);
+        }
+
+        return *this;
+    }
+
+private:
+    int size_ = 0;
+    int* data_ = nullptr;
+};
+```
+
+Без `std::exchange` пришлось бы отдельно копировать значение и вручную обнулять источник.
+
 ## Пример 7: move assignment
 
 ```cpp
@@ -309,6 +460,130 @@ X c = std::move(a);
 ```
 
 `std::move(a)` превращает выражение в rvalue. Выбирается move constructor.
+
+## Пример 8.1: срезка при копировании через базовый класс
+
+Виртуальные функции работают через ссылку или указатель на базовый класс.
+
+Но copy/move constructors и copy/move assignment не бывают виртуальными. Поэтому при копировании через `Base` копируется только базовая часть объекта.
+
+В C++ нельзя объявить виртуальными копирующие и перемещающие конструкторы и операторы присваивания.
+
+```cpp
+#include <print>
+
+class Base {
+public:
+    virtual void Use() const {
+        std::println("Base");
+    }
+
+    virtual ~Base() = default;
+
+private:
+    int data = 1;
+};
+
+class Derived : public Base {
+public:
+    void Use() const override {
+        std::println("Derived");
+    }
+
+private:
+    int extra_data = 2;
+};
+
+Base CreateCopy(const Base& interface) {
+    interface.Use();  // вызовет Derived::Use, если пришел Derived
+    return interface; // срезка: копируется только Base-часть
+}
+
+int main() {
+    Derived d;
+
+    Base copy = CreateCopy(d);
+    copy.Use(); // Base
+}
+```
+
+Разбор:
+
+```cpp
+interface.Use();
+```
+
+Метод виртуальный, поэтому вызов идет через vtable и доходит до `Derived::Use`.
+
+```cpp
+return interface;
+```
+
+Возвращается `Base` по значению. Конструктор копирования не виртуальный, поэтому создается объект `Base`, а часть `Derived` теряется.
+
+Важно: функция с сигнатурой `Derived CreateCopy(const Base& interface)` не решает проблему. Из `Base&` нельзя просто вернуть `Derived` без явного знания реального типа.
+
+Чтобы случайно не получить срезку, у полиморфного базового класса часто удаляют copy/move операции:
+
+```cpp
+class Base {
+public:
+    Base() = default;
+    virtual ~Base() = default;
+
+    Base(const Base&) = delete;
+    Base& operator=(const Base&) = delete;
+    Base(Base&&) = delete;
+    Base& operator=(Base&&) = delete;
+
+    virtual void Use() const = 0;
+};
+```
+
+Тогда такой код не скомпилируется:
+
+```cpp
+Base CreateCopy(const Base& interface) {
+    return interface; // ошибка: copy constructor удален
+}
+```
+
+Если все же нужна полиморфная копия, копирование выносят в отдельный виртуальный метод `Clone`:
+
+```cpp
+#include <memory>
+
+class Base {
+public:
+    virtual ~Base() = default;
+    Base() = default;
+
+    virtual std::unique_ptr<Base> Clone() const = 0;
+
+protected:
+    int data = 0;
+};
+
+class Derived : public Base {
+public:
+    int extra_data = 0;
+
+    std::unique_ptr<Base> Clone() const override {
+        return std::make_unique<Derived>(*this);
+    }
+};
+```
+
+Теперь объект можно безопасно копировать через указатель на базовый класс:
+
+```cpp
+std::unique_ptr<Base> obj = std::make_unique<Derived>();
+
+std::unique_ptr<Base> obj_copied = obj->Clone();
+std::unique_ptr<Base> obj_new = std::move(obj_copied);
+```
+
+`Clone` вызывает копирование реального типа `Derived`, поэтому `extra_data` не теряется.
 
 ## Пример 9: copy может быть удален
 
