@@ -277,6 +277,67 @@ int main() {
 
 Для владеющих типов это часто дешевле и безопаснее копирования.
 
+Для своего владеющего типа удобно сделать дружественный `swap`.
+
+```cpp
+#include <utility>
+
+class Buffer {
+public:
+    Buffer() = default;
+
+    Buffer(Buffer&& other) noexcept {
+        swap(*this, other);
+    }
+
+    Buffer& operator=(Buffer&& other) noexcept {
+        if (this != &other) {
+            Buffer temp(std::move(other));
+            swap(*this, temp);
+        }
+        return *this;
+    }
+
+    friend void swap(Buffer& lhs, Buffer& rhs) noexcept {
+        using std::swap;
+        swap(lhs.size_, rhs.size_);
+        swap(lhs.data_, rhs.data_);
+    }
+
+private:
+    int size_ = 0;
+    int* data_ = nullptr;
+};
+```
+
+Так move constructor и move assignment сводятся к обмену указателей и размеров.
+
+`friend` нужен, чтобы `swap` имел доступ к приватным полям и находился через ADL при вызове `swap(a, b)`.
+
+Внутри своего `swap` для полей лучше писать не `std::swap(...)`, а так:
+
+```cpp
+using std::swap;
+swap(lhs.field_, rhs.field_);
+```
+
+Так компилятор сначала сможет найти пользовательский `swap` для типа поля через ADL, а если его нет - возьмет `std::swap`.
+
+То же правило полезно и для обычного метода обмена:
+
+```cpp
+class Example {
+public:
+    void swap(Example& other) noexcept {
+        using std::swap;
+        swap(data_, other.data_);
+    }
+
+private:
+    DataType data_;
+};
+```
+
 ## Пример 6.1: принудительное перемещение
 
 Именованный объект - это lvalue, даже если его тип `T&&`.
@@ -333,6 +394,22 @@ private:
 
 `std::exchange` делает код перемещения короче и выразительнее: вернуть старое значение, а в объект записать новое.
 
+Общий вид:
+
+```cpp
+old_value = std::exchange(object, new_value);
+```
+
+Сначала из `object` забирается старое значение, потом в `object` записывается `new_value`.
+
+В move constructor это удобно для "забрать ресурс и оставить источник пустым":
+
+```cpp
+data_ = std::exchange(other.data_, nullptr);
+```
+
+Это особенно полезно для сырых указателей, файловых дескрипторов, размеров и других простых полей владения.
+
 ```cpp
 #include <utility>
 
@@ -372,6 +449,40 @@ private:
 ```
 
 Без `std::exchange` пришлось бы отдельно копировать значение и вручную обнулять источник.
+
+Для обычных полей вроде `std::string` или `std::vector` чаще пишут `std::move`, а `std::exchange` используют, когда нужно явно задать состояние moved-from объекта.
+
+## Пример 6.4: почему не memcpy
+
+`memcpy` копирует байты, но не вызывает constructors, assignment operators и destructors.
+
+Для объектов с владением это почти всегда ошибка:
+
+```cpp
+#include <cstring>
+#include <memory>
+
+struct Holder {
+    std::unique_ptr<int> p;
+};
+
+int main() {
+    Holder a{std::make_unique<int>(42)};
+    Holder b;
+
+    std::memcpy(&b, &a, sizeof(Holder)); // ошибка логики
+}
+```
+
+После такого у `a.p` и `b.p` будут одинаковые байты указателя. Оба объекта будут думать, что владеют одним ресурсом.
+
+Для move нужно использовать move constructor или move assignment:
+
+```cpp
+Holder b = std::move(a);
+```
+
+`memcpy` допустим только для тривиально копируемых типов, где побитовое копирование действительно описывает корректное копирование объекта.
 
 ## Пример 7: move assignment
 
