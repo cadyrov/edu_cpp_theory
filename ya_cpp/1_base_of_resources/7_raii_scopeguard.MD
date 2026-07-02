@@ -302,6 +302,71 @@ save
 
 Если `dismiss()` не вызвать, при выходе будет `rollback`.
 
+## Boost.Scope
+
+В реальном коде ScopeGuard часто не пишут вручную, а берут готовый.
+
+В Boost для этого есть `boost::scope::scope_exit`.
+
+```cpp
+#include <boost/scope/scope_exit.hpp>
+#include <iostream>
+
+void foo() {
+    boost::scope::scope_exit cleanup([] {
+        std::cout << "cleanup\n";
+    });
+
+    std::cout << "body\n";
+}
+```
+
+Вывод:
+
+```text
+body
+cleanup
+```
+
+`scope_exit` выполняет переданное действие при выходе из области видимости.
+
+Это работает при:
+
+- обычном выходе;
+- раннем `return`;
+- исключении.
+
+### Что позволяет Boost.Scope
+
+`Boost.Scope` позволяет не писать свой ScopeGuard для типовых случаев.
+
+Основные готовые варианты:
+
+- `boost::scope::scope_exit` - выполнить действие при любом выходе из scope;
+- `boost::scope::scope_fail` - выполнить действие только при выходе из-за исключения;
+- `boost::scope::scope_success` - выполнить действие только при успешном выходе;
+- `boost::scope::unique_resource` - хранить ресурс и функцию освобождения вместе.
+
+Пример rollback только при ошибке:
+
+```cpp
+#include <boost/scope/scope_fail.hpp>
+#include <iostream>
+#include <stdexcept>
+
+void save() {
+    boost::scope::scope_fail rollback([] {
+        std::cout << "rollback\n";
+    });
+
+    std::cout << "save\n";
+
+    throw std::runtime_error("error");
+}
+```
+
+Если функция выйдет через исключение, будет выполнен `rollback`.
+
 ## Важное правило
 
 Деструктор не должен бросать исключения.
@@ -358,4 +423,6 @@ body
 - `std::lock_guard` - пример RAII для mutex.
 - ScopeGuard выполняет произвольное действие при выходе из scope.
 - ScopeGuard можно отключить через `dismiss`.
+- `boost::scope::scope_exit` - готовый ScopeGuard из Boost.
+- `boost::scope::scope_fail` и `boost::scope::scope_success` разделяют выход по ошибке и успешный выход.
 - Деструкторы не должны бросать исключения.
