@@ -124,7 +124,101 @@ int main() {
 
 Это удобно, если ресурс действительно нужен нескольким владельцам.
 
-## Пример 6: callback и время жизни
+## Пример 6: C API с out-параметром
+
+Некоторые C API возвращают ресурс не через `return`, а через указатель на указатель.
+
+```cpp
+struct Handle;
+
+int create_handle(Handle** out);
+void destroy_handle(Handle* handle);
+```
+
+До C++23 такой код часто писали вручную:
+
+```cpp
+#include <memory>
+#include <stdexcept>
+
+struct HandleDeleter {
+    void operator()(Handle* handle) const noexcept {
+        if (handle != nullptr) {
+            destroy_handle(handle);
+        }
+    }
+};
+
+using HandlePtr = std::unique_ptr<Handle, HandleDeleter>;
+
+HandlePtr make_handle() {
+    Handle* raw = nullptr;
+
+    if (create_handle(&raw) != 0) {
+        throw std::runtime_error("create_handle failed");
+    }
+
+    return HandlePtr(raw);
+}
+```
+
+Проблема: между получением `raw` и помещением в `unique_ptr` легко ошибиться.
+
+## Пример 7: std::out_ptr
+
+`std::out_ptr` адаптирует умный указатель под C API, которое записывает новый ресурс в `T**`.
+
+```cpp
+#include <memory>
+
+HandlePtr make_handle() {
+    HandlePtr handle;
+
+    if (create_handle(std::out_ptr(handle)) != 0) {
+        throw std::runtime_error("create_handle failed");
+    }
+
+    return handle;
+}
+```
+
+Идея:
+
+- C API получает `Handle**`;
+- после вызова новый сырой указатель автоматически попадает в `handle`;
+- освобождение остается за `unique_ptr` и его deleter-ом.
+
+`std::out_ptr` нужен, когда C API создает новый ресурс.
+
+## Пример 8: std::inout_ptr
+
+`std::inout_ptr` нужен, когда C API принимает старый ресурс и может заменить его новым.
+
+```cpp
+int reload_handle(Handle** inout);
+
+void reload(HandlePtr& handle) {
+    if (reload_handle(std::inout_ptr(handle)) != 0) {
+        throw std::runtime_error("reload_handle failed");
+    }
+}
+```
+
+Идея:
+
+- текущий ресурс передается в C API;
+- C API может заменить указатель;
+- после вызова `unique_ptr` снова владеет актуальным ресурсом.
+
+`std::inout_ptr` используют осторожно: нужно понимать контракт C API.
+
+Если API сначала освобождает старый ресурс, а потом пишет новый, это один контракт.
+
+Если API ожидает, что старый ресурс освободит вызывающая сторона, это другой контракт.
+
+Для ошибки тоже важен контракт: изменился ли out-параметр при неуспешном возврате.
+
+## Пример 9: callback и время жизни
 
 ```cpp
 #include <functional>
@@ -214,6 +308,21 @@ int* raw = nullptr;
 
 Для этого нужен custom deleter.
 
+### out_ptr и inout_ptr
+
+`std::out_ptr` и `std::inout_ptr` появились в C++23.
+
+Они нужны для аккуратной передачи `unique_ptr`/`shared_ptr` в C API с параметрами вида `T**`.
+
+```cpp
+create_handle(std::out_ptr(handle));   // API создает новый ресурс
+reload_handle(std::inout_ptr(handle)); // API может заменить существующий ресурс
+```
+
+Не используй `&ptr.get()`: `get()` возвращает значение указателя, а не место, куда можно записать новый указатель.
+
+Если C++23 недоступен, обычно используют временный сырой указатель и сразу оборачивают его в умный указатель.
+
 ## Что будет выведено
 
 ```cpp
@@ -251,6 +360,8 @@ int main() {
 - `unique_ptr` в параметре обычно означает передачу владения.
 - `release()` снимает владение и требует ручного освобождения.
 - Для C API часто нужен custom deleter.
+- `std::out_ptr` адаптирует умный указатель для C API, которое создает ресурс через `T**`.
+- `std::inout_ptr` адаптирует умный указатель для C API, которое может заменить уже существующий ресурс.
 - Сырой указатель не продлевает жизнь объекта.
 - Callback с `shared_ptr` продлевает жизнь объекта.
 - Callback с `weak_ptr` проверяет, жив ли объект.
