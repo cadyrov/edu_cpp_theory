@@ -237,6 +237,57 @@ main widget
 
 После перемещения `a` находится в корректном, но пустом состоянии.
 
+## `std::experimental::propagate_const`
+
+Обычный `std::unique_ptr<Impl>` не прокидывает `const` внутрь `Impl`.
+
+```cpp
+class Widget {
+public:
+    void draw() const {
+        impl_->draw(); // можно вызвать неконстантный Impl::draw()
+    }
+
+private:
+    struct Impl;
+    std::unique_ptr<Impl> impl_;
+};
+```
+
+Проблема: `draw() const` запрещает менять сам `impl_`, но не объект, на который он указывает.
+
+`std::experimental::propagate_const` исправляет это:
+
+```cpp
+#include <experimental/propagate_const>
+#include <memory>
+
+class Widget {
+public:
+    void draw() const;
+
+private:
+    struct Impl;
+    std::experimental::propagate_const<std::unique_ptr<Impl>> impl_;
+};
+```
+
+Теперь в `const`-методах `impl_` ведет себя как указатель на `const Impl`.
+
+```cpp
+struct Widget::Impl {
+    void draw() const {}
+    void mutate() {}
+};
+
+void Widget::draw() const {
+    impl_->draw();   // OK
+    // impl_->mutate(); // ошибка
+}
+```
+
+Используй `propagate_const`, когда хочешь сохранить const-correctness в PImpl.
+
 ## Частая ошибка
 
 ```cpp
@@ -264,4 +315,5 @@ private:
 - Деструктор класса с PImpl нужно определять в `.cpp`.
 - Копирование обычно запрещают.
 - Перемещение можно разрешить через move constructor и move assignment.
+- `propagate_const` помогает прокинуть `const` к `Impl`.
 - PImpl уменьшает зависимости и пересборки.
