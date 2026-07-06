@@ -294,6 +294,27 @@ std::unique_ptr<FILE, FileDeleter> b;       // удаляет через FileDel
 
 Это разные типы.
 
+### Почему не make_unique
+
+`std::make_unique<T>()` создает `std::unique_ptr<T>` со стандартным удалителем.
+
+Если нужен кастомный deleter, `make_unique` не подходит:
+
+```cpp
+auto file = std::make_unique<FILE>(); // плохо: FILE нельзя создавать так
+```
+
+Для таких случаев `unique_ptr` создают явно:
+
+```cpp
+std::unique_ptr<FILE, FileDeleter> file(
+    std::fopen("data.txt", "r"),
+    FileDeleter{}
+);
+```
+
+Для обычных C++-объектов без особого способа освобождения лучше использовать `std::make_unique`.
+
 ### Кастомный удалитель и release
 
 ```cpp
@@ -338,6 +359,7 @@ int main() {
 - Копировать `unique_ptr` нельзя.
 - Передавать владение можно через `std::move`.
 - `std::make_unique<T>()` лучше прямого `new`.
+- `std::make_unique<T>()` создает `unique_ptr` со стандартным удалителем.
 - `get()` дает сырой указатель без передачи владения.
 - `reset()` удаляет текущий объект.
 - `release()` отдает сырой указатель и снимает владение.
