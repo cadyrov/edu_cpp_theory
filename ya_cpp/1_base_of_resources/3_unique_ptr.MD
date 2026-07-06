@@ -225,6 +225,91 @@ int main() {
 
 Он вызывает `delete[]`, а не `delete`.
 
+## Пример 9: кастомный удалитель
+
+По умолчанию `std::unique_ptr<T>` освобождает объект через `delete`.
+
+Иногда ресурс нужно освобождать другой функцией:
+
+- `FILE*` через `std::fclose`;
+- память из C API через специальную функцию библиотеки;
+- дескриптор ОС через `close`/`CloseHandle`;
+- объект из пула через возврат в пул.
+
+Для этого у `unique_ptr` есть второй шаблонный параметр - deleter.
+
+```cpp
+#include <cstdio>
+#include <memory>
+
+struct FileDeleter {
+    void operator()(FILE* file) const noexcept {
+        if (file != nullptr) {
+            std::fclose(file);
+        }
+    }
+};
+
+int main() {
+    std::unique_ptr<FILE, FileDeleter> file(
+        std::fopen("data.txt", "r")
+    );
+
+    if (file == nullptr) {
+        return 1;
+    }
+
+    // используем file.get()
+}
+```
+
+Когда `file` выйдет из области видимости, будет вызван `FileDeleter`.
+
+### Лямбда как deleter
+
+```cpp
+#include <cstdio>
+#include <memory>
+
+int main() {
+    auto deleter = [](FILE* file) noexcept {
+        if (file != nullptr) {
+            std::fclose(file);
+        }
+    };
+
+    std::unique_ptr<FILE, decltype(deleter)> file(
+        std::fopen("data.txt", "r"),
+        deleter
+    );
+}
+```
+
+Важно: тип deleter-а входит в тип `unique_ptr`.
+
+```cpp
+std::unique_ptr<FILE> a;                    // удаляет через delete
+std::unique_ptr<FILE, FileDeleter> b;       // удаляет через FileDeleter
+```
+
+Это разные типы.
+
+### Кастомный удалитель и release
+
+```cpp
+auto raw = file.release();
+```
+
+После `release()` кастомный удалитель уже не будет вызван.
+
+Ответственность за освобождение снова переходит к сырому указателю:
+
+```cpp
+if (raw != nullptr) {
+    std::fclose(raw);
+}
+```
+
 ## Что будет выведено
 
 ```cpp
@@ -257,4 +342,6 @@ int main() {
 - `reset()` удаляет текущий объект.
 - `release()` отдает сырой указатель и снимает владение.
 - Для массивов используется `std::unique_ptr<T[]>`.
+- Для нестандартного освобождения ресурса используется кастомный deleter.
+- Тип deleter-а является частью типа `std::unique_ptr`.
 - Главная польза: `delete` вызывается автоматически.
