@@ -1,2 +1,15 @@
-//Реализуй мини-StaticVector<T, N>: хранит сырой std::byte-буфер, size_, метод EmplaceBack(args...) 
-// через std::construct_at, деструктор через std::destroy_at.
+#include <memory>
+#include <thread>
+
+std::shared_ptr<int> current;
+
+void reader() {
+    auto local = current;
+    if (local) {
+        (void)*local;
+    }
+}
+
+void writer() {
+    current = std::make_shared<int>(42);
+}
