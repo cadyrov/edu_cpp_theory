@@ -1,4 +1,4 @@
-# 16. Основы constexpr, if constexpr и немедленные функции
+# 17. Основы constexpr, if constexpr и немедленные функции
 
 ## Суть
 
