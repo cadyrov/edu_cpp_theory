@@ -59,6 +59,41 @@ void advance_impl(Iterator& it, int n, std::input_iterator_tag) {
 
 Выбор реализации идет через тип-тег.
 
+### Пример 4: compile-time вычисление
+
+Шаблоны могут считать значения на этапе компиляции.
+
+```cpp
+#include <cstddef>
+
+template <std::size_t N>
+struct Fibonacci {
+    static const unsigned value =
+        Fibonacci<N - 1>::value + Fibonacci<N - 2>::value;
+};
+
+template <>
+struct Fibonacci<0> {
+    static const unsigned value = 0;
+};
+
+template <>
+struct Fibonacci<1> {
+    static const unsigned value = 1;
+};
+
+int main() {
+    static_assert(Fibonacci<6>::value == 8);
+}
+```
+
+`Fibonacci<N>` рекурсивно обращается к `Fibonacci<N - 1>` и `Fibonacci<N - 2>`.
+
+Специализации `Fibonacci<0>` и `Fibonacci<1>` нужны как база рекурсии.
+Без них компилятор продолжил бы инстанцировать шаблоны дальше.
+
+Сейчас для таких задач чаще используют `constexpr`-функции, но пример хорошо показывает, что шаблон может порождать разные типы и значения во время компиляции.
+
 ## Подводные камни
 
 `static_assert` должен давать понятную ошибку.
@@ -87,11 +122,24 @@ if constexpr (std::is_pointer_v<T>) {
 
 Шаблоны легко усложнить. Если обычная функция решает задачу, шаблон не нужен.
 
+Рекурсивным шаблонам нужна база.
+
+```cpp
+template <std::size_t N>
+struct Fibonacci {
+    static const unsigned value =
+        Fibonacci<N - 1>::value + Fibonacci<N - 2>::value;
+};
+```
+
+Без специализаций для `0` и `1` такая рекурсия не остановится.
+
 ## Саммари
 
 - `type traits` дают информацию о типах.
 - `static_assert` проверяет ограничения на этапе компиляции.
 - `if constexpr` выбирает код для конкретного типа.
 - `tag dispatch` выбирает реализацию через тип-тег.
+- Шаблоны могут выполнять compile-time вычисления.
 - Шаблоны полезны для обобщенного кода.
 - Главный риск - сложные ошибки и переусложнение.

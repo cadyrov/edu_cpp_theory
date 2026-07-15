@@ -62,6 +62,45 @@ SameType<int, int>::type;    // int
 SameType<int, double>::type; // ошибки: type нет
 ```
 
+`typename` перед `SameType<...>::type` нужен, если это имя используется как тип.
+
+```cpp
+#include <array>
+
+template <typename T1, typename T2>
+struct SameType {};
+
+template <typename T>
+struct SameType<T, T> {
+    using type = T;
+};
+
+using IsArraysSame =
+    typename SameType<std::array<int, 5>, std::array<int, 6>>::type;
+```
+
+Этот код не скомпилируется.
+
+`std::array<int, 5>` и `std::array<int, 6>` - разные типы, потому что размер входит в тип `std::array`.
+
+Значит выбирается основной шаблон:
+
+```cpp
+template <typename T1, typename T2>
+struct SameType {};
+```
+
+А в нем нет вложенного типа `type`.
+
+Рабочий вариант:
+
+```cpp
+using IsArraysSame =
+    typename SameType<std::array<int, 5>, std::array<int, 5>>::type;
+```
+
+Тут оба типа одинаковые, поэтому выбирается частичная специализация `SameType<T, T>`, где `type` существует.
+
 ### Пример 3: стек поверх контейнера
 
 ```cpp
