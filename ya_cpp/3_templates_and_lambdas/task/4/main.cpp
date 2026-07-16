@@ -1,16 +1,20 @@
+#include <utility>
+
 template <typename F, typename G>
 class Compose {
-    // здесь определите поля структуры
+    F f_;
+    G g_;
 public:
     template <typename F1, typename G1>
-    Compose(F1 &&f, G1 &&g) {
-        // здесь ваш код
-    }
+    Compose(F1 &&f, G1 &&g):f_(std::forward<F1>(f)),g_(std::forward<G1>(g)) {}
 
-    // определите operator(), который принимает один шаблонный аргумент и вычисляет композицию функций
+    template<typename O>
+    decltype(auto) operator() (O&& in){
+        return f_(g_(std::forward<O>(in)));
+    }
 };
 
 template <typename F, typename G>
 Compose<F, G> compose(F &&f, G &&g) {
-    // здесь ваш код
+    return Compose<F, G>(std::forward<F>(f),std::forward<G>(g));
 } 
