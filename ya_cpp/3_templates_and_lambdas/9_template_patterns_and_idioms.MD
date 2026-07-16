@@ -22,7 +22,28 @@ void print_number(T value) {
 
 `type traits` отвечают на вопросы о типах.
 
-### Пример 2: if constexpr
+### Пример 2: общий тип
+
+`std::common_type_t<T, U>` выбирает общий тип, к которому можно привести оба типа.
+
+```cpp
+#include <type_traits>
+
+template <typename T, typename U>
+std::common_type_t<T, U> add(T a, U b) {
+    return a + b;
+}
+```
+
+Например, для `int` и `double` общим типом будет `double`.
+
+```cpp
+auto x = add(1, 2.5); // double
+```
+
+Это полезно, когда тип результата хочется зафиксировать явно, а не оставлять только на `auto`.
+
+### Пример 3: if constexpr
 
 ```cpp
 #include <type_traits>
@@ -39,7 +60,7 @@ void print(T value) {
 
 Ненужная ветка не компилируется для конкретного `T`.
 
-### Пример 3: tag dispatch
+### Пример 4: tag dispatch
 
 ```cpp
 #include <iterator>
@@ -59,7 +80,7 @@ void advance_impl(Iterator& it, int n, std::input_iterator_tag) {
 
 Выбор реализации идет через тип-тег.
 
-### Пример 4: compile-time вычисление
+### Пример 5: compile-time вычисление
 
 Шаблоны могут считать значения на этапе компиляции.
 
@@ -137,6 +158,7 @@ struct Fibonacci {
 ## Саммари
 
 - `type traits` дают информацию о типах.
+- `std::common_type_t<T, U>` помогает выбрать общий тип для двух типов.
 - `static_assert` проверяет ограничения на этапе компиляции.
 - `if constexpr` выбирает код для конкретного типа.
 - `tag dispatch` выбирает реализацию через тип-тег.

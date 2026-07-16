@@ -1,4 +1,4 @@
 template <typename T>
-T square(T a, T b){
-    return a*b;
+T square(T a){
+    return a*a;
 }
