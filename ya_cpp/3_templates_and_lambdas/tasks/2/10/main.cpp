@@ -1,6 +1,13 @@
-#include <iostream>
+template<typename T>
+void foo(T) {
 
-template<typename F>
-void call_and_print(F&& fn) {
-    std::cout << fn() << "/n";
+}
+
+void foo(double) {
+
+}
+
+int main() {
+    foo(1);    // шаблон: foo<int>(T)
+    foo(1.0);  // обычная перегрузка foo(double)
 }

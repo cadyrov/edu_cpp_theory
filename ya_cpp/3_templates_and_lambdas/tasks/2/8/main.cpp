@@ -1,13 +1,15 @@
 template <typename T>
-bool is_equal(const T& a, const T& b) {
-    return a == b;
-}
-
-template <typename T>
-bool is_equal(const T* a, const T* b) {
-    if (a == nullptr || b == nullptr) {
-        return a == b;
+ T max_value(T a, T b) {
+    if (a > b) {
+        return a;
     }
 
-    return *a == *b;
-}
+    return b;
+ }
+
+ int main() {
+    max_value(1, 1.0);
+
+
+    return 0;
+ }
