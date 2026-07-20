@@ -1,17 +1,19 @@
-//4. Напишите шаблон `LimitChecker<Limit>` с методом `check`.
+//4.  Передайте объект `Dimensions` как нетиповой параметр шаблона.
 #include <cstddef>
-#include <cassert>
+#include <string>
 
-template<typename T, T Limit>
-class LimitChecker{
+
+class Dimensions{
     public:
-        bool check(const T& in) {
-            return in > T{} && in <= Limit;
-        }
+        std::size_t rows_;
+        std::size_t cols_;
 };
 
+template<Dimensions D>
+class Image{};
+
 int main() {
-    assert((LimitChecker<int, 5>{}.check(4)));
+    Image<Dimensions{30, 40}> d;
 
     return 0;
 }

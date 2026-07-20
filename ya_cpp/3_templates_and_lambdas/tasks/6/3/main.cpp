@@ -1,18 +1,16 @@
-//3. Напишите функцию `repeat<N>`, которая печатает строку `N` раз.
-
-#include <print>
+//3. Напишите пользовательский тип `Dimensions` с `rows` и `cols`.
 #include <cstddef>
 #include <string>
 
-template<std::size_t N>
-void repeat(const std::string& in) {
-    for (std::size_t i = 0; i < N; ++i) {
-        std::println("{}",in);
-    }
-}
+
+class Dimensions{
+    public:
+        std::size_t rows_;
+        std::size_t cols_;
+};
 
 int main() {
-    repeat<5>("hello");
+    Dimensions d;
 
     return 0;
 }

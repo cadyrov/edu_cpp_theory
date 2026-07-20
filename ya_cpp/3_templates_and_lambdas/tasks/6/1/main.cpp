@@ -1,14 +1,17 @@
-//1. Напишите `StaticArray<T, N>` с массивом размера `N`.
-#include <cstddef>
+//1. Напишите шаблон `EpsilonCompare<T, epsilon>`.
+#include <cassert>
+#include <cmath>
 
-template <typename T, std::size_t N>
-class StaticArray{
+template <typename T, T epsilon = static_cast<T>(.00001)>
+class EpsilonCompare{
     public:
-    T arr[N]{};
+    static bool Compare(const T& a,const T& b) {
+        return std::abs(a - b) < epsilon;
+    } 
 };
 
 int main() {
-    StaticArray<int, 3> a;
+    assert((!EpsilonCompare<double>::Compare(.1, .2)));
 
     return 0;
 }

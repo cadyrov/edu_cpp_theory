@@ -1,21 +1,17 @@
-//Добавьте метод `size`, возвращающий `N`.
-#include <cstddef>
+//2. Используйте `epsilon` для сравнения двух чисел с плавающей точкой.
 #include <cassert>
+#include <cmath>
 
-template <typename T, std::size_t N>
-class StaticArray{
-public:
-    T arr[N]{};
-
-    static std::size_t size() {
-        return N;
-    }
+template <typename T, T epsilon = static_cast<T>(.00001)>
+class EpsilonCompare{
+    public:
+    static bool Compare(const T& a,const T& b) {
+        return std::abs(a - b) < epsilon;
+    } 
 };
 
 int main() {
-    StaticArray<int, 3> a;
-
-    assert(a.size() == 3);
+    assert((!EpsilonCompare<double>::Compare(.1, .2)));
 
     return 0;
 }
