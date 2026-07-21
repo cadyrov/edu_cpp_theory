@@ -1,21 +1,18 @@
-//9. Напишите `WrapperByInt<C>`, где `C` - шаблон с нетиповым параметром `int`.
-#include <vector>
-
-template <template <int> typename C>
-class WrapperByInt {
-public:
-    C<5> a;
-};
-
-template <int Val>
-struct B {
-    static constexpr int val = Val;
+//9. Напишите `Threshold<T, value>` для проверки значения относительно порога.
+#include <cassert>
+template<typename T, T trh>
+class Threshold {
+    public:
+        static constexpr bool check(const T& in){
+            return in < trh; 
+        }
 };
 
 
 int main() {
-
-   WrapperByInt<B> b;
-
-   return 0;
+    
+    static_assert(Threshold<int, 3>::check(1));
+    static_assert(!Threshold<int, 3>::check(5));
+    
+    return 0;
 }

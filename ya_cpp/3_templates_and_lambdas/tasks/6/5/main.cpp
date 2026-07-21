@@ -1,24 +1,30 @@
-//5. Напишите шаблон `Power<Base, Exp>` для вычисления степени на этапе компиляции.
+//5. Напишите `Matrix<T, dims>`, где размер берется из `dims.rows * dims.cols`.
 #include <cassert>
+#include <vector>
+#include <cstddef>
 
-template <typename T, T Base, int Exp>
-class Power {
-    private:
-        static constexpr T pow(T base, int exp) {
-            T result = 1;
-            for (int i = 0; i < exp; ++i) {
-                result *= base;
-            }
-
-            return result;
-        }
+class Dimensions{
     public:
-        static constexpr T value = Power::pow(Base, Exp);
+        std::size_t rows_;
+        std::size_t cols_;
 };
 
+template<typename T, Dimensions D>
+class Matrix{
+    public:
+        Matrix():data_(std::vector<T>(D.cols_ * D.rows_)){};
+
+        static constexpr std::size_t Size() {
+            return D.cols_ * D.rows_;
+        }   
+
+    private:
+        std::vector<T> data_;
+};
+
+
 int main() {
-    static_assert(Power<int, 4, 5>::value == 1024);
+    static_assert(Matrix<int, Dimensions{4, 5}>::Size() == 20);
     
     return 0;
 }
-

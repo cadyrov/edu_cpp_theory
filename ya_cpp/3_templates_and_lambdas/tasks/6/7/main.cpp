@@ -1,44 +1,39 @@
-// Напишите `Matrix<T, Rows, Cols>` с хранением `Rows * Cols` элементов.
-#include<vector>
-#include<utility>
-#include<stdexcept>
-#include<cassert>
+//6. Добавьте метод `rows`, который возвращает `dims.rows`.
 
-template<typename T,int Rows,int Cols>
+#include <cassert>
+#include <vector>
+#include <cstddef>
+
+class Dimensions{
+    public:
+        std::size_t rows_;
+        std::size_t cols_;
+};
+
+template<typename T, Dimensions D>
 class Matrix{
     public:
-        Matrix():data_(std::vector<T>{r_*c_}){};
+        Matrix():data_(std::vector<T>(D.cols_ * D.rows_)){};
 
-        void Set(const T& in,int x, int y){
-            if (x < 0 || x >= Rows || y < 0 || y >= Cols) {
-                throw std::exception();
-            }
+        static constexpr std::size_t Size() {
+            return D.cols_ * D.rows_;
+        }   
 
-            data_[x*Cols+y] = in;
+        static constexpr std::size_t Rows() {
+            return D.rows_;
         }
 
-        const T& Get(int x, int y) const{
-            if (x < 0 || x >= Rows || y < 0 || y >= Cols) {
-                throw std::exception();
-            }
-
-            return data_[x*Cols+y];
+        static constexpr std::size_t Cols() {
+            return D.cols_;
         }
 
     private:
-        static const int r_ = Rows;
-        static const int c_ = Cols;
         std::vector<T> data_;
 };
 
 
 int main() {
-    Matrix<double, 4, 5> b;
-
-    b.Set(4.0, 1, 2);
-
-    assert(b.Get(1, 2) == 4.0);
-
+    static_assert(Matrix<int, Dimensions{4, 5}>::Size() == 20);
     
     return 0;
 }
