@@ -1,88 +1,41 @@
-# 10. Невладеющие последовательности: std::string_view и std::span
+# 10. Невладеющие последовательности: std::string_view, std::span, std::mdspan
 
 ## Суть
 
 Невладеющая последовательность не хранит данные.
 
-Она только смотрит на уже существующие данные.
+Она только смотрит на уже существующую память.
 
-В стандартной библиотеке часто используют:
+В стандартной библиотеке есть:
 
 - `std::string_view` - вид на строку;
-- `std::span` - вид на массив элементов.
+- `std::span` - вид на одномерный массив;
+- `std::mdspan` - вид на многомерный массив.
 
-Главное правило: данные должны жить дольше, чем view.
+Главное правило: исходные данные должны жить дольше, чем view.
 
 ## std::string_view
 
-`std::string_view` - легкий объект для чтения строки без владения.
-
-Обычно он хранит два поля:
-
-- указатель на начало;
-- размер.
+`std::string_view` хранит указатель на символы и размер.
 
 ```cpp
-#include <iostream>
 #include <string_view>
 
-void print(std::string_view text) {
-    std::cout << text << '\n';
-}
-
-int main() {
-    print("hello");
-}
-```
-
-`std::string_view` удобно передавать в функцию по значению.
-
-Копируется только указатель и размер, а не символы.
-
-## Что можно передать в string_view
-
-```cpp
-void print(std::string_view text);
-
-std::string s = "Hello";
-const char* c = "World";
-
-print(s);
-print(c);
-print({c, 3}); // "Wor"
-```
-
-`std::string_view` можно создать из:
-
-- `std::string`;
-- C-строки;
-- пары `const char*` + размер.
-
-## Зачем он нужен
-
-Если функция принимает `const std::string&`, строковый литерал сначала может превратиться во временный `std::string`.
-
-```cpp
-void log(const std::string& text);
-
-log("hello"); // может создаться временный std::string
-```
-
-Если функция принимает `std::string_view`, копировать текст не нужно.
-
-```cpp
 void log(std::string_view text);
 
-log("hello"); // view на литерал
+std::string s = "hello";
+const char* c = "world";
+
+log(s);
+log(c);
+log("literal");
 ```
 
-Используй `std::string_view`, когда функция только читает строку.
+Его удобно передавать по значению: копируются только указатель и размер, а не символы.
 
-## remove_prefix и remove_suffix
+## string_view и подстроки
 
-`std::string_view` не может менять исходную строку.
-
-Но он может менять собственные границы.
+`std::string_view` может менять свои границы, не меняя исходную строку.
 
 ```cpp
 std::string_view text = "Hello World!";
@@ -93,34 +46,38 @@ text.remove_suffix(1);
 
 Теперь `text` смотрит на `"World"`.
 
-Исходные символы не менялись.
-
-## substr без копии
-
 ```cpp
-std::string_view text = "abcdef";
 std::string_view part = text.substr(1, 3);
 ```
 
-`part` смотрит на `"bcd"` без копирования символов.
+`std::string_view::substr` не копирует символы.
 
-Это отличие от `std::string::substr`, который создает новую строку.
+`std::string::substr` копирует и возвращает новую строку.
+
+## string_view и C API
+
+`std::string_view` не обязан заканчиваться `'\0'`.
+
+```cpp
+std::string s = "123";
+std::string_view sv{s.data(), 1};
+
+// std::strlen(sv.data()); // прочитает больше, чем один символ
+```
+
+Если C API ждет C-строку, используй `std::string::c_str()`.
 
 ## Строковые константы
 
-Для строковых констант `std::string_view` часто удобнее, чем `const char*` и `const char[]`.
-
 ```cpp
 const std::string_view content_type = "application/json";
-
-std::cout << content_type.size() << '\n';
 ```
 
-У `const char*` `sizeof` даст размер указателя.
+Так проще получить корректный размер:
 
-У `const char[]` `sizeof` даст размер массива вместе с `'\0'`.
-
-У `std::string_view` есть явный `size()` без учета завершающего нуля.
+```cpp
+content_type.size(); // 16
+```
 
 Можно использовать литерал `sv`.
 
@@ -130,95 +87,210 @@ using namespace std::string_view_literals;
 const auto content_type = "application/json"sv;
 ```
 
-## C API
-
-`std::string_view` не обязан заканчиваться `'\0'`.
-
-```cpp
-std::string s = "123";
-std::string_view sv{s.data(), 1};
-
-// std::strlen(sv.data()); // прочитает не только view
-```
-
-Если C API ждет null-terminated строку, используй `std::string` и `c_str()`.
-
-```cpp
-std::string s = "123";
-std::strlen(s.c_str()); // ok
-```
-
 ## std::span
 
-`std::span` - невладеющий вид на непрерывный массив элементов.
+`std::span<T>` - невладеющий вид на непрерывный массив элементов.
+
+Он хранит указатель и размер.
 
 ```cpp
-#include <iostream>
 #include <span>
 #include <vector>
 
-void print(std::span<const int> values) {
-    for (int value : values) {
-        std::cout << value << ' ';
+void square_all(std::span<int> values) {
+    for (int& value : values) {
+        value *= value;
     }
 }
 
 int main() {
     std::vector<int> values{1, 2, 3};
-    print(values);
+    square_all(values);
 }
 ```
 
-`std::span` хранит указатель и размер.
+Через `std::span<int>` можно менять исходные элементы.
 
-Одна функция может принять разные контейнеры с непрерывной памятью.
+Для чтения используй `std::span<const int>`.
 
 ```cpp
 void print(std::span<const int> values);
-
-std::array<int, 3> a{1, 2, 3};
-std::vector<int> v{4, 5, 6};
-
-print(a);
-print(v);
 ```
+
+`std::span` можно создать из:
+
+- C-style массива;
+- `std::array`;
+- `std::vector`;
+- указателя и размера.
+
+```cpp
+int raw[] = {1, 2, 3};
+std::array<int, 3> arr{1, 2, 3};
+std::vector<int> vec{1, 2, 3};
+
+print(raw);
+print(arr);
+print(vec);
+print({vec.data(), 2});
+```
+
+## span и C API
+
+`std::span` удобно использовать между C++-кодом и C-like API.
+
+```cpp
+void api(int* data, std::size_t size);
+
+std::vector<int> values{1, 2, 3};
+std::span<int> view = values;
+
+api(view.data(), view.size());
+```
+
+В отличие от C-style массива, `span` не теряет размер при передаче в функцию.
+
+## Subspan
+
+У `std::span` есть методы для создания view на часть диапазона:
+
+- `first(count)`;
+- `last(count)`;
+- `subspan(offset, count)`.
+
+```cpp
+std::array<int, 5> values{1, 2, 3, 4, 5};
+std::span<int> s = values;
+
+auto first = s.first(3);      // 1 2 3
+auto last = s.last(2);        // 4 5
+auto middle = s.subspan(1, 3); // 2 3 4
+```
+
+Данные не копируются.
+
+## Статический и динамический extent
+
+У `std::span` размер может быть известен на этапе компиляции или только во время выполнения.
+
+```cpp
+std::array<int, 3> a{1, 2, 3};
+std::span s = a;
+
+static_assert(s.extent == 3);
+```
+
+Для `std::vector` размер динамический.
+
+```cpp
+std::vector<int> v{1, 2, 3};
+std::span s = v;
+
+static_assert(decltype(s)::extent == std::dynamic_extent);
+```
+
+Динамический `span` хранит и указатель, и размер.
+
+Статический `span` может хранить только указатель.
+
+## std::mdspan
+
+`std::mdspan` - невладеющий многомерный view на одномерную память.
+
+```cpp
+#include <mdspan>
+#include <vector>
+
+std::vector<int> data{1, 2, 3, 4, 5, 6};
+
+std::mdspan matrix(data.data(), 2, 3);
+```
+
+Теперь `data` можно читать как матрицу `2 x 3`.
+
+```cpp
+for (std::size_t i = 0; i < matrix.extent(0); ++i) {
+    for (std::size_t j = 0; j < matrix.extent(1); ++j) {
+        matrix[i, j] *= 10;
+    }
+}
+```
+
+`extent(0)` - размер первого измерения.
+
+`extent(1)` - размер второго измерения.
+
+## Зачем нужен mdspan
+
+Вектор векторов хранит строки матрицы в разных областях памяти.
+
+```cpp
+std::vector<std::vector<int>> matrix;
+```
+
+Это может хуже использовать кеш процессора.
+
+А `std::mdspan` позволяет хранить данные одним плоским вектором и работать с ним как с матрицей.
+
+```cpp
+std::vector<int> data(rows * cols);
+std::mdspan view(data.data(), rows, cols);
+```
+
+Типичный пример - матрица смежности графа.
+
+## mdspan и extents
+
+Размерности `mdspan` описываются отдельным типом `std::extents`.
+
+Можно смешивать compile-time и runtime размеры.
+
+```cpp
+using Extents = std::extents<std::size_t, std::dynamic_extent, 4>;
+
+std::vector<int> data(3 * 4);
+std::mdspan<int, Extents> view(data.data(), 3);
+```
+
+Здесь число колонок `4` известно на этапе компиляции, а число строк `3` передается во время выполнения.
 
 ## Подводные камни
 
-## 1. Висячий string_view
+## 1. Висячий view
 
 ```cpp
-std::string_view bad() {
-    std::string s = "hello";
-    return s; // view на уничтоженную строку
+std::span<int> bad() {
+    std::vector<int> values{1, 2, 3};
+    return values; // span на уничтоженный vector
 }
 ```
 
-`string_view` не продлевает жизнь строки.
+Это относится и к `string_view`, и к `span`, и к `mdspan`.
 
-## 2. Опасный substr
-
-```cpp
-std::string_view find_name(const std::string& text) {
-    auto pos = text.find(", ");
-    return text.substr(pos + 2); // ошибка: std::string::substr вернул временную строку
-}
-```
-
-`std::string::substr` возвращает `std::string`.
-
-Временная строка уничтожится, а `string_view` повиснет.
-
-Лучше сначала создать view:
+## 2. Реаллокация ломает span
 
 ```cpp
-std::string_view find_name(std::string_view text) {
-    auto pos = text.find(", ");
-    return text.substr(pos + 2);
-}
+std::vector<int> values{1, 2, 3};
+std::span<int> view = values;
+
+values.resize(1000);
+
+// view может стать невалидным
 ```
 
-## 3. string_view не обязан быть null-terminated
+Если буфер переехал, старый `span` указывает в старую память.
+
+## 3. span требует непрерывную память
+
+```cpp
+std::list<int> values{1, 2, 3};
+
+// std::span<int> view = values; // ошибка
+```
+
+`std::list` не подходит.
+
+## 4. string_view не обязан быть null-terminated
 
 ```cpp
 std::string_view text{"abc\0def", 7};
@@ -226,50 +298,26 @@ std::string_view text{"abc\0def", 7};
 
 Нельзя бездумно передавать `text.data()` в C API, ожидающий `'\0'`.
 
-## 4. string_view не меняет символы
+## 5. mdspan тоже не владеет памятью
 
 ```cpp
-std::string s = "Hello";
-std::string_view view = s;
-
-// view[0] = 'h'; // ошибка
+std::vector<int> data(9);
+std::mdspan matrix(data.data(), 3, 3);
 ```
 
-`std::string_view` дает доступ только для чтения.
-
-## 5. span требует непрерывную память
-
-```cpp
-std::list<int> values{1, 2, 3};
-
-// std::span<int> s = values; // ошибка
-```
-
-`std::list` не подходит.
-
-## 6. span тоже не владеет данными
-
-```cpp
-std::span<int> make_bad() {
-    std::vector<int> values{1, 2, 3};
-    return values; // span на уничтоженный vector
-}
-```
-
-Данные должны жить дольше, чем view.
+`data` должен жить дольше, чем `matrix`.
 
 ## Саммари
 
-- `std::string_view` и `std::span` не владеют данными.
-- Они дешевы для передачи в функции по значению.
-- `std::string_view` хранит указатель и размер.
-- `std::string_view` удобен для чтения строк без копии.
-- Его можно создать из `std::string`, C-строки и указателя с размером.
-- `remove_prefix` и `remove_suffix` меняют только сам view.
-- `std::string_view::substr` не копирует символы.
-- `std::string::substr` копирует и может создать временную строку.
+- `std::string_view`, `std::span` и `std::mdspan` не владеют данными.
+- Их удобно передавать по значению.
+- `std::string_view` хранит указатель и размер строки.
 - `std::string_view` не обязан заканчиваться `'\0'`.
-- Для C API, ожидающего `'\0'`, нужен `std::string::c_str()`.
-- Главный риск - висячий view.
-- `std::span` удобен для массивов и векторов.
-- `std::span` работает только с непрерывной памятью.
+- `std::span` хранит указатель и размер массива.
+- `std::span` может менять исходные элементы, если это `span<T>`, а не `span<const T>`.
+- `std::span` не страдает от pointer decay.
+- У `std::span` есть `first`, `last`, `subspan`.
+- `std::span` поддерживает статический и динамический extent.
+- `std::mdspan` представляет одномерную память как многомерный массив.
+- Размерности `mdspan` задаются через `std::extents`.
+- Главный риск всех view - время жизни исходных данных и реаллокации.
