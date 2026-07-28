@@ -17,3 +17,10 @@ ya_cpp/2_shared_ownership/1_shared_ptr_weak_ptr.MD
 ты вопрос с примером кода
 я ответ
 если неправильно - разбор
+
+ya_cpp/4_stdlib
+
+find /Users/kot/Documents/repos/edu_cpp_theory/ya_cpp/1_base_of_resources -name "*.md" | sort | xargs pandoc -o /Users/kot/Documents/1_base_of_resources.pdf
+find /Users/kot/Documents/repos/edu_cpp_theory/ya_cpp/2_shared_ownership -name "*.md" | sort | xargs pandoc -o /Users/kot/Documents/2_shared_ownership.pdf
+find /Users/kot/Documents/repos/edu_cpp_theory/ya_cpp/3_templates_and_lambdas -name "*.md" | sort | xargs pandoc -o /Users/kot/Documents/3_templates_and_lambdas.pdf
+find /Users/kot/Documents/repos/edu_cpp_theory/ya_cpp/4_stdlib -name "*.md" | sort | xargs pandoc -o /Users/kot/Documents/4_stdlib.pdf
