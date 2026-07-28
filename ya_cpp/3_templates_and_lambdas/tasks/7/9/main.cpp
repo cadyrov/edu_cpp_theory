@@ -1,18 +1,17 @@
-//9. Напишите `Threshold<T, value>` для проверки значения относительно порога.
+//9. Напишите обертку над функцией, которая возвращает результат через `decltype(auto)`.
 #include <cassert>
-template<typename T, T trh>
-class Threshold {
-    public:
-        static constexpr bool check(const T& in){
-            return in < trh; 
-        }
-};
 
+int val = 10;
+int& foo() {
+    return val;
+}
+
+decltype(auto) wrapper(){
+    return foo();
+}
 
 int main() {
-    
-    static_assert(Threshold<int, 3>::check(1));
-    static_assert(!Threshold<int, 3>::check(5));
+    decltype(auto) n = wrapper();
     
     return 0;
 }

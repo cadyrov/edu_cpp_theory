@@ -1,20 +1,25 @@
-//10. Сравните вариант с `template <auto value>` и `template <typename T, T value>`.
-#include <cassert>
-#include <type_traits>
+//10.  Напишите `compose`, который хранит две функции и вызывает `f(g(x))`.
+#include <utility>
 
+template<typename F, typename G>
+struct compose{
+    F f;
+    G g;
 
-template <auto value>
-struct A {}; // тип value выводится автоматически
+    template<typename T1>
+    decltype(auto) operator()(T1&& in) {
+        return f(g(std::forward<T1>(in)));
+    }
+};
 
-template <typename T, T value>
-struct B {}; // тип T задается явно
 
 int main() {
-    static_assert(std::is_same_v<A<3>, A<3>>);
-    static_assert(!std::is_same_v<A<3>, A<'c'>>);
+    auto f = [](int x) { return x + 1; };
+    auto g = [](int x) { return x * 2; };
 
-    static_assert(std::is_same_v<B<int, 3>, B<int, 3>>);
-    static_assert(!std::is_same_v<B<int, 3>, B<char, 'c'>>);
+    compose c{f, g};
+
+    int result = c(10); // f(g(10)) = 21
 
 
     return 0;
