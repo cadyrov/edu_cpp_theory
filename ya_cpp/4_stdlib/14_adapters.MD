@@ -2,7 +2,7 @@
 
 ## Суть
 
-Адаптер контейнера дает ограниченный интерфейс поверх другого контейнера.
+Адаптер контейнера дает специальный ограниченный интерфейс поверх другого контейнера.
 
 В стандартной библиотеке есть:
 
@@ -10,28 +10,81 @@
 - `std::queue`;
 - `std::priority_queue`.
 
-Они скрывают лишние операции и оставляют только нужную модель доступа.
+Они скрывают лишние операции базового контейнера и оставляют только нужную модель доступа.
 
-## Пример 1: stack
+## std::stack
+
+`std::stack` моделирует стек.
+
+Правило: LIFO - last in, first out.
+
+Последний добавленный элемент извлекается первым.
 
 ```cpp
-#include <iostream>
 #include <stack>
 
-int main() {
-    std::stack<int> s;
+std::stack<int> s;
 
-    s.push(10);
-    s.push(20);
+s.push(10);
+s.push(20);
+s.push(30);
 
-    std::cout << s.top() << '\n';
-    s.pop();
+int x = s.top(); // 30
+s.pop();
+```
+
+`top()` возвращает верхний элемент.
+
+`pop()` удаляет верхний элемент, но не возвращает его.
+
+По умолчанию `std::stack` использует `std::deque`.
+
+Можно указать другой базовый контейнер, если у него есть `back()`, `push_back()`, `pop_back()`.
+
+```cpp
+std::stack<int, std::vector<int>> s1;
+std::stack<int, std::list<int>> s2;
+```
+
+## DFS через stack
+
+`std::stack` удобно использовать для обхода графа в глубину без рекурсии.
+
+```cpp
+void dfs(const std::vector<std::vector<int>>& graph, int start) {
+    std::vector<int> visited(graph.size(), 0);
+    std::stack<int> st;
+
+    st.push(start);
+
+    while (!st.empty()) {
+        int node = st.top();
+        st.pop();
+
+        if (visited[node]) {
+            continue;
+        }
+
+        visited[node] = 1;
+
+        for (int next : graph[node]) {
+            if (!visited[next]) {
+                st.push(next);
+            }
+        }
+    }
 }
 ```
 
-`stack` работает по правилу LIFO: последним пришел, первым вышел.
+Стек хранит вершины, которые еще нужно обработать.
 
-## Пример 2: queue
+## std::queue
+
+`std::queue` моделирует очередь.
+
+Правило: FIFO - first in, first out.
+
+Первый добавленный элемент извлекается первым.
 
 ```cpp
 #include <queue>
@@ -40,37 +93,126 @@ std::queue<int> q;
 
 q.push(10);
 q.push(20);
+q.push(30);
 
-q.front(); // 10
+int first = q.front(); // 10
+int last = q.back();   // 30
+
 q.pop();
 ```
 
-`queue` работает по правилу FIFO: первым пришел, первым вышел.
+`front()` возвращает первый элемент.
 
-## Пример 3: priority_queue
+`back()` возвращает последний элемент.
+
+`pop()` удаляет первый элемент, но не возвращает его.
+
+По умолчанию `std::queue` использует `std::deque`.
+
+Базовый контейнер должен иметь `back()`, `front()`, `push_back()`, `pop_front()`.
 
 ```cpp
-#include <iostream>
-#include <queue>
+std::queue<int, std::list<int>> q;
+```
 
-int main() {
-    std::priority_queue<int> q;
+## BFS через queue
 
-    q.push(10);
-    q.push(30);
-    q.push(20);
+`std::queue` удобно использовать для обхода графа в ширину.
 
-    std::cout << q.top() << '\n';
+```cpp
+void bfs(const std::vector<std::vector<int>>& graph, int start) {
+    std::vector<int> visited(graph.size(), 0);
+    std::queue<int> q;
+
+    visited[start] = 1;
+    q.push(start);
+
+    while (!q.empty()) {
+        int node = q.front();
+        q.pop();
+
+        for (int next : graph[node]) {
+            if (!visited[next]) {
+                visited[next] = 1;
+                q.push(next);
+            }
+        }
+    }
 }
 ```
 
-Вывод:
+Очередь сначала обрабатывает вершины текущего уровня, потом следующего.
 
-```text
-30
+## std::priority_queue
+
+`std::priority_queue` - очередь с приоритетом.
+
+Элемент с максимальным приоритетом всегда доступен через `top()`.
+
+```cpp
+#include <queue>
+
+std::priority_queue<int> q;
+
+q.push(10);
+q.push(30);
+q.push(20);
+
+q.top(); // 30
 ```
 
-По умолчанию сверху максимальный элемент.
+По умолчанию это max-heap: сверху наибольший элемент.
+
+Для min-heap можно использовать `std::greater`.
+
+```cpp
+std::priority_queue<
+    int,
+    std::vector<int>,
+    std::greater<int>
+> q;
+```
+
+## Куча
+
+`std::priority_queue` обычно реализован поверх кучи.
+
+Куча хранит частичный порядок:
+
+- родитель не меньше потомков для max-heap;
+- максимум быстро доступен сверху;
+- полного порядка между всеми элементами нет.
+
+Основные операции:
+
+- `top()` - `O(1)`;
+- `push()` / `emplace()` - `O(log N)`;
+- `pop()` - `O(log N)`.
+
+Свободные алгоритмы для кучи:
+
+- `std::make_heap`;
+- `std::push_heap`;
+- `std::pop_heap`;
+- `std::sort_heap`;
+- `std::is_heap`;
+- `std::is_heap_until`.
+
+Они работают с контейнером напрямую.
+
+`std::priority_queue` инкапсулирует кучу и не дает случайно сломать ее инвариант.
+
+## Базовый контейнер priority_queue
+
+По умолчанию используется `std::vector`.
+
+Можно использовать другой контейнер с random access iterator, `front()`, `push_back()`, `pop_back()`.
+
+```cpp
+std::priority_queue<int, std::deque<int>> q;
+```
+
+`std::list` не подходит, потому что у него нет произвольного доступа.
 
 ## Подводные камни
 
@@ -83,7 +225,9 @@ s.pop();
 
 Сначала читаем, потом удаляем.
 
-## 2. Нельзя итерироваться по stack
+Для `queue` сначала `front()`, потом `pop()`.
+
+## 2. Нельзя итерироваться по адаптеру
 
 ```cpp
 // for (int x : s) {} // нет такого интерфейса
@@ -105,13 +249,38 @@ if (!s.empty()) {
 
 Она быстро отдает только самый приоритетный элемент.
 
-Итерироваться по всем в отсортированном порядке нельзя.
+Итерироваться по всем элементам в отсортированном порядке нельзя.
+
+## 5. priority_queue не ищет элементы
+
+Куча не поддерживает быстрый поиск произвольного элемента.
+
+Если нужен поиск по ключу, нужен другой контейнер.
+
+## 6. stack и queue не быстрее сами по себе
+
+Они задают модель доступа.
+
+Скорость зависит от базового контейнера и операций.
+
+## Когда использовать
+
+- `std::stack` - LIFO, DFS, откат операций, парсинг скобок.
+- `std::queue` - FIFO, BFS, обработка задач в порядке поступления.
+- `std::priority_queue` - всегда нужен самый приоритетный элемент.
 
 ## Саммари
 
-- Адаптер ограничивает интерфейс контейнера.
-- `stack` - LIFO.
-- `queue` - FIFO.
-- `priority_queue` быстро отдает максимальный элемент.
-- `pop` удаляет, но не возвращает значение.
-- Перед `top` и `front` проверяй `empty()`.
+- Адаптер ограничивает интерфейс существующего контейнера.
+- `std::stack` реализует LIFO.
+- `std::queue` реализует FIFO.
+- `std::priority_queue` реализует очередь с приоритетом.
+- `stack` и `queue` по умолчанию используют `std::deque`.
+- `priority_queue` по умолчанию использует `std::vector` и `std::less`.
+- `pop()` удаляет, но не возвращает значение.
+- Перед `top()`, `front()` и `back()` проверяй `empty()`.
+- `std::stack` удобен для DFS.
+- `std::queue` удобен для BFS.
+- `std::priority_queue::top()` стоит `O(1)`.
+- `push()` и `pop()` у `priority_queue` стоят `O(log N)`.
+- `priority_queue` хранит кучу, а не полностью отсортированный контейнер.
