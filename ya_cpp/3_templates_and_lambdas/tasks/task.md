@@ -100,9 +100,9 @@
 5. Добавьте `push`, `pop`, `top` в `Stack`.
 6. Напишите шаблонный конструктор `Stack(It first, It last)`.
 7. Объясните в коде, почему `It` не должен быть параметром класса.
-8. Напишите trait `HasValueType<T>`.
+8. Добавьте в `Stack` псевдонимы типов: `value_type`, `reference`, `const_reference`, `size_type`.
 9. Используйте `static_assert`, чтобы проверить совместимость `T` и `Container::value_type`.
-10. Напишите обертку, которая использует `Container::reference` и `Container::size_type`.
+10. Добавьте в `Stack` методы `empty` и `size`, используя `size_type`.
 
 ## 9. Паттерны и идиомы шаблонов
 
