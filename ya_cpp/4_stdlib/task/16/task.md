@@ -46,7 +46,7 @@ constexpr const size_t N = 100'000;
 constexpr const size_t ITERATIONS = 30;
 
 std::vector<int> generateData(size_t count) {
-    vector<int> data(count);
+    std::vector<int> data(count);
 
     std::mt19937 gen{42};
     std::uniform_int_distribution<int> dist(1, N);

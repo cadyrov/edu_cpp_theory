@@ -57,35 +57,30 @@ int main() {
 - Обязательно используйте std::less<> (без параметров) как компаратор множества, чтобы включить поддержку гетерогенного поиска.
 
 ## Задание 2
-Не успели вы улучшить систему конфигурационных параметров оборудования, как вас попросили модернизировать ещё одну поисковую систему с std::map в качестве основного контейнера.
+Вам нужно модернизировать хранилище конфигураций на основе `std::map`.
+Ключ `MyKey` содержит числовой идентификатор и текстовое описание, но упорядочение
+и уникальность ключей определяются только полем `id`.
 
-Скопируйте код ниже к себе и выполните задания:
-- В HeavyObject добавьте оператор <=> для сравнения Id.
-- Реализуйте гетерогенные операции сравнения по id и std::string_view name.
-- Создайте std::set, хранящий HeavyObject.
-- Вставьте в него несколько объектов и выполните три операции разными методами:
-- - Поиск по id.
-- - Поиск по std::string_view.
-- - Проверка наличия элемента.
-- Определите пользовательский гетерогенный компаратор TransparentCmp, который поддерживает:
-- - сравнение MyKey с int.
-- - сравнение MyKey с std::string_view`.
-- Создайте std::map с типом MyKey в качестве ключа и типом std::pair<int, std::string>.
-- Заполните карту 100 000 элементов четырьмя разными способами (для значения используйте строку "dev-" + index_as_str):
-- - insert
-- - emplace(k, v)
-- - emplace(std::piecewise_construct, ...)
-- - try_emplace(k, v)
-- Выполните:
-- - Поиск по int.
-- - Проверку на наличие ключа по std::string_view.
+Скопируйте код ниже и выполните задания:
+- Определите прозрачный компаратор `TransparentCmp`.
+- Компаратор должен сравнивать `MyKey` с `MyKey`, `MyKey` с `int` и `int` с `MyKey` по полю `id`.
+- Добавьте в компаратор псевдоним `is_transparent`, чтобы `std::map` поддерживал поиск непосредственно по `int` без создания временного `MyKey`.
+- Создайте `std::map` с ключом `MyKey`, значением `std::pair<int, std::string>` и компаратором `TransparentCmp`.
+- Заполните карту 100 000 элементов четырьмя способами, по 25 000 элементов каждым:
+  - `insert`;
+  - `emplace(k, v)`;
+  - `emplace(std::piecewise_construct, ...)`;
+  - `try_emplace(k, v)`.
+- Для каждого элемента используйте идентификатор `i` и строку `"dev-" + std::to_string(i)`.
+- Найдите элемент по числу `56'789` с помощью `find`.
+- Проверьте наличие идентификатора `12'345` с помощью `contains`.
 
 
 ```cpp
 #include <map>
 #include <print>
 #include <string>
-#include <string_view>
+#include <tuple>
 #include <utility>
 
 struct MyKey {
@@ -93,36 +88,40 @@ struct MyKey {
     std::string textId;
 };
 
+struct TransparentCmp {
+    // Добавьте is_transparent и три перегрузки operator()
+};
+
 int main() {
-    // Создайте std::map и вставьте 100'000 элементов, используя 4 разных способа
+    // Создайте std::map<MyKey, std::pair<int, std::string>, TransparentCmp>
 
     for (int i = 0; i < 25'000; ++i) {
-        configMap.insert();
+        // Вставьте элемент через insert
     }
 
     for (int i = 25'000; i < 50'000; ++i) {
-        configMap.emplace();
+        // Вставьте элемент через emplace(k, v)
     }
 
     for (int i = 50'000; i < 75'000; ++i) {
-        configMap.emplace();
+        // Используйте emplace(std::piecewise_construct, ...)
     }
 
     for (int i = 75'000; i < 100'000; ++i) {
-        configMap.try_emplace();
+        // Вставьте элемент через try_emplace(k, v)
     }
 
-    if (/* Ваш код поиска по int здесь */) {
-        std::println("Found by int: {} -> {}", it->first.id, it->second);
+    auto it = /* Найдите элемент по int без создания MyKey */;
+    if (it != configMap.end()) {
+        std::println("Found by int: {} -> ({}, {})",
+                     it->first.id, it->second.first, it->second.second);
     }
 
-    // Проверка по string_view
-    std::string_view target = "dev-56789";
-    std::println("Contains key '{}': {}", target, /* Ваш код поиска по target здесь */);
-} 
+    std::println("Contains id 12345: {}", /* Проверка через contains */);
+}
 ```
 
-- Используйте std::piecewise_construct только с std::forward_as_tuple(...).
-- Операции поиска должны вызываться с int и std::string_view.
-- Не создавайте временные объекты типа MyKey при поиске.
-- Не забудьте добавить псевдоним типа is_transparent.
+- Используйте `std::piecewise_construct` только вместе с `std::forward_as_tuple(...)`.
+- В операциях `find` и `contains` передавайте `int`.
+- Не создавайте временный объект `MyKey` при поиске.
+- Не забудьте добавить псевдоним типа `is_transparent`.
