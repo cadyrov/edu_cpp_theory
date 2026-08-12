@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.20)
+
+project(associative_containers_benchmark LANGUAGES CXX)
+
+find_package(benchmark REQUIRED)
+
+add_executable(associative_containers_benchmark main.cpp)
+
+target_compile_features(associative_containers_benchmark PRIVATE cxx_std_23)
+target_link_libraries(associative_containers_benchmark PRIVATE benchmark::benchmark)
