@@ -3,6 +3,10 @@
         {
             "name": "Mac",
             "compilerPath": "/usr/bin/clang++",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/opt/homebrew/opt/google-benchmark/include"
+            ],
             "cppStandard": "c++23",
             "cStandard": "c23",
             "intelliSenseMode": "macos-clang-arm64"
