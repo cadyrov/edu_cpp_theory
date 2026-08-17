@@ -1,0 +1,5 @@
+if(EXISTS "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/labirinth_tests[1]_tests.cmake")
+  include("/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/labirinth_tests[1]_tests.cmake")
+else()
+  add_test(labirinth_tests_NOT_BUILT labirinth_tests_NOT_BUILT)
+endif()

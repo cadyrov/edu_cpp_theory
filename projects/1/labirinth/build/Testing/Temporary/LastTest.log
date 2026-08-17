@@ -1,0 +1,30 @@
+Start testing: Aug 17 21:55 EEST
+----------------------------------------------------------
+1/1 Testing: GameTest.GameName
+1/1 Test: GameTest.GameName
+Command: "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/labirinth_tests" "--gtest_filter=GameTest.GameName" "--gtest_also_run_disabled_tests"
+Directory: /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build
+"GameTest.GameName" start time: Aug 17 21:55 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = GameTest.GameName
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from GameTest
+[ RUN      ] GameTest.GameName
+[       OK ] GameTest.GameName (0 ms)
+[----------] 1 test from GameTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"GameTest.GameName" end time: Aug 17 21:55 EEST
+"GameTest.GameName" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Aug 17 21:55 EEST

@@ -9,7 +9,8 @@
             ],
             "cppStandard": "c++23",
             "cStandard": "c23",
-            "intelliSenseMode": "macos-clang-arm64"
+            "intelliSenseMode": "macos-clang-arm64",
+            "compileCommands": "${workspaceFolder}/projects/1/labirinth/build/compile_commands.json"
         }
     ],
     "version": 4
