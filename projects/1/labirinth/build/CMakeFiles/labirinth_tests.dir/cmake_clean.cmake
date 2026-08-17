@@ -1,6 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/labirinth_tests.dir/tests/main_test.cpp.o"
   "CMakeFiles/labirinth_tests.dir/tests/main_test.cpp.o.d"
+  "CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o"
+  "CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o.d"
   "labirinth_tests"
   "labirinth_tests.pdb"
   "labirinth_tests[1]_tests.cmake"

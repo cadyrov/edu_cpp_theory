@@ -662,6 +662,30 @@ tests/main_test.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth_tests.dir/build.make CMakeFiles/labirinth_tests.dir/tests/main_test.cpp.s
 .PHONY : tests/main_test.cpp.s
 
+tests/player_test.o: tests/player_test.cpp.o
+.PHONY : tests/player_test.o
+
+# target to build an object file
+tests/player_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth_tests.dir/build.make CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o
+.PHONY : tests/player_test.cpp.o
+
+tests/player_test.i: tests/player_test.cpp.i
+.PHONY : tests/player_test.i
+
+# target to preprocess a source file
+tests/player_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth_tests.dir/build.make CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.i
+.PHONY : tests/player_test.cpp.i
+
+tests/player_test.s: tests/player_test.cpp.s
+.PHONY : tests/player_test.s
+
+# target to generate assembly for a file
+tests/player_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth_tests.dir/build.make CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.s
+.PHONY : tests/player_test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -715,6 +739,9 @@ help:
 	@echo "... tests/main_test.o"
 	@echo "... tests/main_test.i"
 	@echo "... tests/main_test.s"
+	@echo "... tests/player_test.o"
+	@echo "... tests/player_test.i"
+	@echo "... tests/player_test.s"
 .PHONY : help
 
 

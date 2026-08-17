@@ -86,19 +86,35 @@ CMakeFiles/labirinth_tests.dir/tests/main_test.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/labirinth_tests.dir/tests/main_test.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/main_test.cpp -o CMakeFiles/labirinth_tests.dir/tests/main_test.cpp.s
 
+CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o: CMakeFiles/labirinth_tests.dir/flags.make
+CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o: /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/player_test.cpp
+CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o: CMakeFiles/labirinth_tests.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o -MF CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o.d -o CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/player_test.cpp
+
+CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/player_test.cpp > CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.i
+
+CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/player_test.cpp -o CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.s
+
 # Object files for target labirinth_tests
 labirinth_tests_OBJECTS = \
-"CMakeFiles/labirinth_tests.dir/tests/main_test.cpp.o"
+"CMakeFiles/labirinth_tests.dir/tests/main_test.cpp.o" \
+"CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o"
 
 # External object files for target labirinth_tests
 labirinth_tests_EXTERNAL_OBJECTS =
 
 labirinth_tests: CMakeFiles/labirinth_tests.dir/tests/main_test.cpp.o
+labirinth_tests: CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o
 labirinth_tests: CMakeFiles/labirinth_tests.dir/build.make
 labirinth_tests: lib/libgtest_main.a
 labirinth_tests: lib/libgtest.a
 labirinth_tests: CMakeFiles/labirinth_tests.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable labirinth_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable labirinth_tests"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/labirinth_tests.dir/link.txt --verbose=$(VERBOSE)
 	/opt/homebrew/bin/cmake -D TEST_TARGET=labirinth_tests -D TEST_EXECUTABLE=/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/labirinth_tests -D TEST_EXECUTOR= -D TEST_WORKING_DIR=/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build -D TEST_EXTRA_ARGS= -D TEST_PROPERTIES= -D TEST_PREFIX= -D TEST_SUFFIX= -D TEST_FILTER= -D NO_PRETTY_TYPES=FALSE -D NO_PRETTY_VALUES=FALSE -D TEST_LIST=labirinth_tests_TESTS -D CTEST_FILE=/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/labirinth_tests[1]_tests.cmake -D TEST_DISCOVERY_TIMEOUT=5 -D TEST_DISCOVERY_EXTRA_ARGS= -D TEST_XML_OUTPUT_DIR= -P /opt/homebrew/share/cmake/Modules/GoogleTestAddTests.cmake
 

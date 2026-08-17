@@ -1,10 +1,10 @@
-Start testing: Aug 17 21:55 EEST
+Start testing: Aug 17 22:30 EEST
 ----------------------------------------------------------
-1/1 Testing: GameTest.GameName
-1/1 Test: GameTest.GameName
+1/4 Testing: GameTest.GameName
+1/4 Test: GameTest.GameName
 Command: "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/labirinth_tests" "--gtest_filter=GameTest.GameName" "--gtest_also_run_disabled_tests"
 Directory: /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build
-"GameTest.GameName" start time: Aug 17 21:55 EEST
+"GameTest.GameName" start time: Aug 17 22:30 EEST
 Output:
 ----------------------------------------------------------
 Running main() from /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -23,8 +23,89 @@ Note: Google Test filter = GameTest.GameName
 Test time =   0.01 sec
 ----------------------------------------------------------
 Test Passed.
-"GameTest.GameName" end time: Aug 17 21:55 EEST
+"GameTest.GameName" end time: Aug 17 22:30 EEST
 "GameTest.GameName" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-End testing: Aug 17 21:55 EEST
+2/4 Testing: PlayerTest.Create
+2/4 Test: PlayerTest.Create
+Command: "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/labirinth_tests" "--gtest_filter=PlayerTest.Create" "--gtest_also_run_disabled_tests"
+Directory: /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build
+"PlayerTest.Create" start time: Aug 17 22:30 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = PlayerTest.Create
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from PlayerTest
+[ RUN      ] PlayerTest.Create
+[       OK ] PlayerTest.Create (0 ms)
+[----------] 1 test from PlayerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"PlayerTest.Create" end time: Aug 17 22:30 EEST
+"PlayerTest.Create" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/4 Testing: PlayerTest.Damage
+3/4 Test: PlayerTest.Damage
+Command: "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/labirinth_tests" "--gtest_filter=PlayerTest.Damage" "--gtest_also_run_disabled_tests"
+Directory: /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build
+"PlayerTest.Damage" start time: Aug 17 22:30 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = PlayerTest.Damage
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from PlayerTest
+[ RUN      ] PlayerTest.Damage
+[       OK ] PlayerTest.Damage (0 ms)
+[----------] 1 test from PlayerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"PlayerTest.Damage" end time: Aug 17 22:30 EEST
+"PlayerTest.Damage" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/4 Testing: PlayerTest.Heal
+4/4 Test: PlayerTest.Heal
+Command: "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/labirinth_tests" "--gtest_filter=PlayerTest.Heal" "--gtest_also_run_disabled_tests"
+Directory: /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build
+"PlayerTest.Heal" start time: Aug 17 22:30 EEST
+Output:
+----------------------------------------------------------
+Running main() from /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/src/gtest_main.cc
+Note: Google Test filter = PlayerTest.Heal
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from PlayerTest
+[ RUN      ] PlayerTest.Heal
+[       OK ] PlayerTest.Heal (0 ms)
+[----------] 1 test from PlayerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"PlayerTest.Heal" end time: Aug 17 22:30 EEST
+"PlayerTest.Heal" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Aug 17 22:30 EEST

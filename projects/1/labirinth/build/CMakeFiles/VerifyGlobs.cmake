@@ -15,6 +15,7 @@ endif()
 file(GLOB_RECURSE NEW_GLOB LIST_DIRECTORIES false "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/*.cpp")
 set(OLD_GLOB
   "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/main_test.cpp"
+  "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/player_test.cpp"
   )
 if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
   message("-- GLOB mismatch!")

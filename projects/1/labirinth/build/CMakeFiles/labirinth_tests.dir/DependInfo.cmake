@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/main_test.cpp" "CMakeFiles/labirinth_tests.dir/tests/main_test.cpp.o" "gcc" "CMakeFiles/labirinth_tests.dir/tests/main_test.cpp.o.d"
+  "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/player_test.cpp" "CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o" "gcc" "CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

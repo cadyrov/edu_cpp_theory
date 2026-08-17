@@ -6,5 +6,7 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest
 
-CXX_FLAGS = -std=c++2b -Wall -Wextra -Wpedantic
+CXX_FLAGSarm64 = -std=c++2b -arch arm64 -Wall -Wextra -Wpedantic
+
+CXX_FLAGS = -std=c++2b -arch arm64 -Wall -Wextra -Wpedantic
 

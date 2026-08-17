@@ -6,5 +6,7 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googlemock/include -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googlemock -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest
 
-CXX_FLAGS = -std=c++2b  -DGTEST_HAS_PTHREAD=1  
+CXX_FLAGSarm64 = -std=c++2b -arch arm64  -DGTEST_HAS_PTHREAD=1  
+
+CXX_FLAGS = -std=c++2b -arch arm64  -DGTEST_HAS_PTHREAD=1  
 

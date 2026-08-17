@@ -1,1 +1,1 @@
-/usr/bin/c++ -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/labirinth_tests.dir/tests/main_test.cpp.o -o labirinth_tests  lib/libgtest_main.a lib/libgtest.a
+/usr/bin/c++  -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/labirinth_tests.dir/tests/main_test.cpp.o CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o -o labirinth_tests  lib/libgtest_main.a lib/libgtest.a

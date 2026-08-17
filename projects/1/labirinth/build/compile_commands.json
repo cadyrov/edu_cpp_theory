@@ -1,37 +1,43 @@
 [
 {
   "directory": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build",
-  "command": "/usr/bin/c++  -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/include -std=c++2b -Wall -Wextra -Wpedantic -o CMakeFiles/labirinth.dir/src/main.cpp.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/src/main.cpp",
+  "command": "/usr/bin/c++  -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/include -std=c++2b -arch arm64 -Wall -Wextra -Wpedantic -o CMakeFiles/labirinth.dir/src/main.cpp.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/src/main.cpp",
   "file": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/src/main.cpp",
   "output": "CMakeFiles/labirinth.dir/src/main.cpp.o"
 },
 {
   "directory": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build",
-  "command": "/usr/bin/c++  -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest -std=c++2b -Wall -Wextra -Wpedantic -o CMakeFiles/labirinth_tests.dir/tests/main_test.cpp.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/main_test.cpp",
+  "command": "/usr/bin/c++  -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest -std=c++2b -arch arm64 -Wall -Wextra -Wpedantic -o CMakeFiles/labirinth_tests.dir/tests/main_test.cpp.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/main_test.cpp",
   "file": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/main_test.cpp",
   "output": "CMakeFiles/labirinth_tests.dir/tests/main_test.cpp.o"
 },
 {
+  "directory": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build",
+  "command": "/usr/bin/c++  -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest -std=c++2b -arch arm64 -Wall -Wextra -Wpedantic -o CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/player_test.cpp",
+  "file": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/player_test.cpp",
+  "output": "CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o"
+},
+{
   "directory": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-build/googlemock",
-  "command": "/usr/bin/c++  -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googlemock/include -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googlemock -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest -std=c++2b  -DGTEST_HAS_PTHREAD=1   -o CMakeFiles/gmock.dir/src/gmock-all.cc.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googlemock/src/gmock-all.cc",
+  "command": "/usr/bin/c++  -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googlemock/include -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googlemock -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest -std=c++2b -arch arm64  -DGTEST_HAS_PTHREAD=1   -o CMakeFiles/gmock.dir/src/gmock-all.cc.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googlemock/src/gmock-all.cc",
   "file": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googlemock/src/gmock-all.cc",
   "output": "_deps/googletest-build/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o"
 },
 {
   "directory": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-build/googlemock",
-  "command": "/usr/bin/c++  -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googlemock/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googlemock -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest -std=c++2b  -DGTEST_HAS_PTHREAD=1   -o CMakeFiles/gmock_main.dir/src/gmock_main.cc.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googlemock/src/gmock_main.cc",
+  "command": "/usr/bin/c++  -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googlemock/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googlemock -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest -std=c++2b -arch arm64  -DGTEST_HAS_PTHREAD=1   -o CMakeFiles/gmock_main.dir/src/gmock_main.cc.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googlemock/src/gmock_main.cc",
   "file": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googlemock/src/gmock_main.cc",
   "output": "_deps/googletest-build/googlemock/CMakeFiles/gmock_main.dir/src/gmock_main.cc.o"
 },
 {
   "directory": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-build/googletest",
-  "command": "/usr/bin/c++  -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/include -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest -std=c++2b  -DGTEST_HAS_PTHREAD=1   -o CMakeFiles/gtest.dir/src/gtest-all.cc.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/src/gtest-all.cc",
+  "command": "/usr/bin/c++  -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/include -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest -std=c++2b -arch arm64  -DGTEST_HAS_PTHREAD=1   -o CMakeFiles/gtest.dir/src/gtest-all.cc.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/src/gtest-all.cc",
   "file": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/src/gtest-all.cc",
   "output": "_deps/googletest-build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o"
 },
 {
   "directory": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-build/googletest",
-  "command": "/usr/bin/c++  -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest -std=c++2b  -DGTEST_HAS_PTHREAD=1   -o CMakeFiles/gtest_main.dir/src/gtest_main.cc.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/src/gtest_main.cc",
+  "command": "/usr/bin/c++  -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest -std=c++2b -arch arm64  -DGTEST_HAS_PTHREAD=1   -o CMakeFiles/gtest_main.dir/src/gtest_main.cc.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/src/gtest_main.cc",
   "file": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/src/gtest_main.cc",
   "output": "_deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o"
 }
