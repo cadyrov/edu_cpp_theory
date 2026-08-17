@@ -22,6 +22,88 @@ void print_number(T value) {
 
 `type traits` отвечают на вопросы о типах.
 
+### Как написать собственный trait
+
+Trait обычно представляет собой шаблонную структуру со статическим значением `value`.
+Например, напишем trait, который проверяет, является ли тип типом `int`.
+
+Сначала задаем общий случай для любого типа:
+
+```cpp
+template <typename T>
+struct IsInt : std::false_type {};
+```
+
+`std::false_type` содержит статическую константу `value`, равную `false`.
+Значит, пока для типа не указано обратное, `IsInt<T>::value` возвращает `false`.
+
+Затем явно специализируем шаблон для `int`:
+
+```cpp
+template <>
+struct IsInt<int> : std::true_type {};
+```
+
+`std::true_type` содержит `value`, равную `true`.
+Специализация выбирается только тогда, когда `T` — это `int`.
+
+```cpp
+static_assert(IsInt<int>::value);
+static_assert(!IsInt<double>::value);
+```
+
+Таким образом:
+
+- основной шаблон описывает поведение по умолчанию;
+- специализация переопределяет поведение для нужного типа;
+- наследование от `std::true_type` или `std::false_type` предоставляет готовое поле `value`.
+
+### Проверка вложенного типа через `std::void_t`
+
+У классов могут быть вложенные типы. Например, у стандартных контейнеров есть
+`value_type`, `size_type` и другие:
+
+```cpp
+std::vector<int>::value_type // int
+```
+
+Чтобы проверить наличие вложенного типа, используют `std::void_t`.
+Он принимает типы и всегда превращает их в `void`:
+
+```cpp
+std::void_t<int> // void
+```
+
+Главное здесь не результат `void`, а проверка: смог ли компилятор получить
+переданный тип. Рассмотрим trait, проверяющий наличие `size_type`:
+
+```cpp
+template <typename T, typename = void>
+struct HasSizeType : std::false_type {};
+
+template <typename T>
+struct HasSizeType<T, std::void_t<typename T::size_type>>
+    : std::true_type {};
+```
+
+Основной шаблон выбирается по умолчанию и возвращает `false`.
+Компилятор также пытается подставить `T` в специализацию:
+
+- если `T::size_type` существует, `std::void_t` превращает его в `void`, и
+  выбирается специализация со значением `true`;
+- если `T::size_type` не существует, специализация отбрасывается, и остается
+  основной шаблон со значением `false`.
+
+```cpp
+#include <vector>
+
+static_assert(HasSizeType<std::vector<int>>::value);
+static_assert(!HasSizeType<int>::value);
+```
+
+`typename` перед `T::size_type` обязателен: он сообщает компилятору, что
+зависимое имя является типом.
+
 ### Пример 2: общий тип
 
 `std::common_type_t<T, U>` выбирает общий тип, к которому можно привести оба типа.
