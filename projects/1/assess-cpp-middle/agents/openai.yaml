@@ -1,0 +1,4 @@
+interface:
+  display_name: "C++ Middle Reviewer"
+  short_description: "Оценка учебного C++ кода на уровне middle"
+  default_prompt: "Используй $assess-cpp-middle, чтобы проверить моё решение текущей микрозадачи."
