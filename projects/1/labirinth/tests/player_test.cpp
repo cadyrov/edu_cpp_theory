@@ -38,7 +38,7 @@ TEST(PlayerTest, Heal) {
     ASSERT_EQ(p.GetMaxHP(), 10);
 
     p.Heal(-3);
-    ASSERT_EQ(p.GetHP(), 1);
+    ASSERT_EQ(p.GetHP(), 1  );
     ASSERT_EQ(p.GetMaxHP(), 10);
 
     p.Heal(3);

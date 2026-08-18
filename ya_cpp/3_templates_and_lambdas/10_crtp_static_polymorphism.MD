@@ -79,6 +79,33 @@ void render(Drawable<T>& object) {
 struct Bad : Drawable<Circle> {}; // ошибка дизайна
 ```
 
+Компилятор сам по себе не запрещает такую ошибку. Базовый класс можно защитить:
+сделать его конструктор закрытым и открыть к нему доступ только типу `Derived`.
+
+```cpp
+template <typename Derived>
+class SafeBase {
+private:
+    SafeBase() = default;
+    friend Derived;
+
+public:
+    void interface() {
+        static_cast<Derived*>(this)->implementation();
+    }
+};
+
+struct Good : SafeBase<Good> {
+    void implementation() {}
+};
+
+struct Other {};
+struct Bad : SafeBase<Other> {}; // ошибка: конструктор SafeBase закрыт
+```
+
+`Good` имеет доступ к конструктору `SafeBase<Good>`, потому что объявлен другом.
+У `Bad` такого доступа нет: другом `SafeBase<Other>` является только `Other`.
+
 CRTP не заменяет обычный runtime-полиморфизм.
 
 ```cpp
@@ -104,4 +131,5 @@ s.draw(); // нет draw_impl
 - Это статический полиморфизм без `virtual`.
 - Вызовы могут инлайниться и не требуют vtable.
 - CRTP полезен для общих операторов и интерфейсных примесей.
+- Закрытый конструктор и `friend Derived` защищают от передачи неправильного типа наследника.
 - Он не подходит для обычного хранения разных типов через общий базовый указатель.
