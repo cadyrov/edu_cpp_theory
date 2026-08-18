@@ -185,12 +185,12 @@ _deps/googletest-build/googletest/clean: _deps/googletest-build/googletest/CMake
 CMakeFiles/labirinth.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth.dir/build.make CMakeFiles/labirinth.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth.dir/build.make CMakeFiles/labirinth.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/CMakeFiles --progress-num=9,10 "Built target labirinth"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/CMakeFiles --progress-num=9,10,11 "Built target labirinth"
 .PHONY : CMakeFiles/labirinth.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/labirinth.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/CMakeFiles 2
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/CMakeFiles 3
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/labirinth.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/CMakeFiles 0
 .PHONY : CMakeFiles/labirinth.dir/rule
@@ -202,7 +202,7 @@ labirinth: CMakeFiles/labirinth.dir/rule
 # codegen rule for target.
 CMakeFiles/labirinth.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth.dir/build.make CMakeFiles/labirinth.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/CMakeFiles --progress-num=9,10 "Finished codegen for target labirinth"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/CMakeFiles --progress-num=9,10,11 "Finished codegen for target labirinth"
 .PHONY : CMakeFiles/labirinth.dir/codegen
 
 # clean rule for target.
@@ -1114,12 +1114,12 @@ CMakeFiles/labirinth_tests.dir/all: _deps/googletest-build/googletest/CMakeFiles
 CMakeFiles/labirinth_tests.dir/all: _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth_tests.dir/build.make CMakeFiles/labirinth_tests.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth_tests.dir/build.make CMakeFiles/labirinth_tests.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/CMakeFiles --progress-num=11,12,13 "Built target labirinth_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/CMakeFiles --progress-num=12,13,14,15,16 "Built target labirinth_tests"
 .PHONY : CMakeFiles/labirinth_tests.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/labirinth_tests.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/CMakeFiles 7
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/CMakeFiles 9
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/labirinth_tests.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/CMakeFiles 0
 .PHONY : CMakeFiles/labirinth_tests.dir/rule
@@ -1131,7 +1131,7 @@ labirinth_tests: CMakeFiles/labirinth_tests.dir/rule
 # codegen rule for target.
 CMakeFiles/labirinth_tests.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth_tests.dir/build.make CMakeFiles/labirinth_tests.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/CMakeFiles --progress-num=11,12,13 "Finished codegen for target labirinth_tests"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/CMakeFiles --progress-num=12,13,14,15,16 "Finished codegen for target labirinth_tests"
 .PHONY : CMakeFiles/labirinth_tests.dir/codegen
 
 # clean rule for target.

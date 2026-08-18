@@ -8,6 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/src/item.cpp" "CMakeFiles/labirinth.dir/src/item.cpp.o" "gcc" "CMakeFiles/labirinth.dir/src/item.cpp.o.d"
   "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/src/main.cpp" "CMakeFiles/labirinth.dir/src/main.cpp.o" "gcc" "CMakeFiles/labirinth.dir/src/main.cpp.o.d"
   )
 

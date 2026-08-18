@@ -614,6 +614,33 @@ gtest_main/fast:
 	$(MAKE) $(MAKESILENT) -f _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/build.make _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/build
 .PHONY : gtest_main/fast
 
+src/item.o: src/item.cpp.o
+.PHONY : src/item.o
+
+# target to build an object file
+src/item.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth.dir/build.make CMakeFiles/labirinth.dir/src/item.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth_tests.dir/build.make CMakeFiles/labirinth_tests.dir/src/item.cpp.o
+.PHONY : src/item.cpp.o
+
+src/item.i: src/item.cpp.i
+.PHONY : src/item.i
+
+# target to preprocess a source file
+src/item.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth.dir/build.make CMakeFiles/labirinth.dir/src/item.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth_tests.dir/build.make CMakeFiles/labirinth_tests.dir/src/item.cpp.i
+.PHONY : src/item.cpp.i
+
+src/item.s: src/item.cpp.s
+.PHONY : src/item.s
+
+# target to generate assembly for a file
+src/item.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth.dir/build.make CMakeFiles/labirinth.dir/src/item.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth_tests.dir/build.make CMakeFiles/labirinth_tests.dir/src/item.cpp.s
+.PHONY : src/item.cpp.s
+
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -637,6 +664,30 @@ src/main.s: src/main.cpp.s
 src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth.dir/build.make CMakeFiles/labirinth.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
+
+tests/item_test.o: tests/item_test.cpp.o
+.PHONY : tests/item_test.o
+
+# target to build an object file
+tests/item_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth_tests.dir/build.make CMakeFiles/labirinth_tests.dir/tests/item_test.cpp.o
+.PHONY : tests/item_test.cpp.o
+
+tests/item_test.i: tests/item_test.cpp.i
+.PHONY : tests/item_test.i
+
+# target to preprocess a source file
+tests/item_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth_tests.dir/build.make CMakeFiles/labirinth_tests.dir/tests/item_test.cpp.i
+.PHONY : tests/item_test.cpp.i
+
+tests/item_test.s: tests/item_test.cpp.s
+.PHONY : tests/item_test.s
+
+# target to generate assembly for a file
+tests/item_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/labirinth_tests.dir/build.make CMakeFiles/labirinth_tests.dir/tests/item_test.cpp.s
+.PHONY : tests/item_test.cpp.s
 
 tests/main_test.o: tests/main_test.cpp.o
 .PHONY : tests/main_test.o
@@ -733,9 +784,15 @@ help:
 	@echo "... gtest_main"
 	@echo "... labirinth"
 	@echo "... labirinth_tests"
+	@echo "... src/item.o"
+	@echo "... src/item.i"
+	@echo "... src/item.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... tests/item_test.o"
+	@echo "... tests/item_test.i"
+	@echo "... tests/item_test.s"
 	@echo "... tests/main_test.o"
 	@echo "... tests/main_test.i"
 	@echo "... tests/main_test.s"

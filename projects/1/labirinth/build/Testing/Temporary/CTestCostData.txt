@@ -1,6 +1,10 @@
 GameTest.Equal 2 0.00522194
-GameTest.GameName 9 0.0014396
-PlayerTest.Create 5 0.00163283
-PlayerTest.Damage 4 0.00198243
-PlayerTest.Heal 4 0.00186995
+GameTest.GameName 28 0.000276713
+PlayerTest.Create 24 0.00068279
+PlayerTest.Damage 23 0.000315958
+PlayerTest.Heal 23 0.00030231
+ItemTest.AddFindInventory 11 0.000627371
+ItemTest.POPInventory 5 0.00147724
+ItemTest.DuplicatInventory 5 0.00206324
+ItemTest.DuplicateInventory 1 0.0113566
 ---

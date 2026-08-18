@@ -1,5 +1,6 @@
 #pragma once
 
+#include "item.hpp"
 #include "utils.hpp"
 
 #include <stdexcept>
@@ -55,10 +56,19 @@ class Player {
         return atk_pwr_;
     }
 
+    Inventory& GetInventory() noexcept {
+        return inventory_;
+    }
+
+    const Inventory& GetInventory() const noexcept {
+        return inventory_;
+    }
+
   private:
     std::string name_;
     int hp_ = 10;
     int max_hp_ = 10;
     int atk_pwr_ = 1;
+    Inventory inventory_;
 };
 } // namespace game

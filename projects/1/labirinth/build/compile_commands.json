@@ -1,9 +1,21 @@
 [
 {
   "directory": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build",
+  "command": "/usr/bin/c++  -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/include -std=c++2b -arch arm64 -Wall -Wextra -Wpedantic -o CMakeFiles/labirinth.dir/src/item.cpp.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/src/item.cpp",
+  "file": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/src/item.cpp",
+  "output": "CMakeFiles/labirinth.dir/src/item.cpp.o"
+},
+{
+  "directory": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build",
   "command": "/usr/bin/c++  -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/include -std=c++2b -arch arm64 -Wall -Wextra -Wpedantic -o CMakeFiles/labirinth.dir/src/main.cpp.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/src/main.cpp",
   "file": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/src/main.cpp",
   "output": "CMakeFiles/labirinth.dir/src/main.cpp.o"
+},
+{
+  "directory": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build",
+  "command": "/usr/bin/c++  -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest -std=c++2b -arch arm64 -Wall -Wextra -Wpedantic -o CMakeFiles/labirinth_tests.dir/tests/item_test.cpp.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/item_test.cpp",
+  "file": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/item_test.cpp",
+  "output": "CMakeFiles/labirinth_tests.dir/tests/item_test.cpp.o"
 },
 {
   "directory": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build",
@@ -16,6 +28,12 @@
   "command": "/usr/bin/c++  -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest -std=c++2b -arch arm64 -Wall -Wextra -Wpedantic -o CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/player_test.cpp",
   "file": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/tests/player_test.cpp",
   "output": "CMakeFiles/labirinth_tests.dir/tests/player_test.cpp.o"
+},
+{
+  "directory": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build",
+  "command": "/usr/bin/c++  -I/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/include -isystem /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest -std=c++2b -arch arm64 -Wall -Wextra -Wpedantic -o CMakeFiles/labirinth_tests.dir/src/item.cpp.o -c /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/src/item.cpp",
+  "file": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/src/item.cpp",
+  "output": "CMakeFiles/labirinth_tests.dir/src/item.cpp.o"
 },
 {
   "directory": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-build/googlemock",
