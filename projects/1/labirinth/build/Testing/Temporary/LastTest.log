@@ -1,10 +1,10 @@
-Start testing: Aug 17 22:30 EEST
+Start testing: Aug 18 12:36 EEST
 ----------------------------------------------------------
 1/4 Testing: GameTest.GameName
 1/4 Test: GameTest.GameName
 Command: "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/labirinth_tests" "--gtest_filter=GameTest.GameName" "--gtest_also_run_disabled_tests"
 Directory: /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build
-"GameTest.GameName" start time: Aug 17 22:30 EEST
+"GameTest.GameName" start time: Aug 18 12:36 EEST
 Output:
 ----------------------------------------------------------
 Running main() from /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -23,7 +23,7 @@ Note: Google Test filter = GameTest.GameName
 Test time =   0.01 sec
 ----------------------------------------------------------
 Test Passed.
-"GameTest.GameName" end time: Aug 17 22:30 EEST
+"GameTest.GameName" end time: Aug 18 12:36 EEST
 "GameTest.GameName" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -31,7 +31,7 @@ Test Passed.
 2/4 Test: PlayerTest.Create
 Command: "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/labirinth_tests" "--gtest_filter=PlayerTest.Create" "--gtest_also_run_disabled_tests"
 Directory: /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build
-"PlayerTest.Create" start time: Aug 17 22:30 EEST
+"PlayerTest.Create" start time: Aug 18 12:36 EEST
 Output:
 ----------------------------------------------------------
 Running main() from /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -50,7 +50,7 @@ Note: Google Test filter = PlayerTest.Create
 Test time =   0.01 sec
 ----------------------------------------------------------
 Test Passed.
-"PlayerTest.Create" end time: Aug 17 22:30 EEST
+"PlayerTest.Create" end time: Aug 18 12:36 EEST
 "PlayerTest.Create" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -58,7 +58,7 @@ Test Passed.
 3/4 Test: PlayerTest.Damage
 Command: "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/labirinth_tests" "--gtest_filter=PlayerTest.Damage" "--gtest_also_run_disabled_tests"
 Directory: /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build
-"PlayerTest.Damage" start time: Aug 17 22:30 EEST
+"PlayerTest.Damage" start time: Aug 18 12:36 EEST
 Output:
 ----------------------------------------------------------
 Running main() from /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -77,7 +77,7 @@ Note: Google Test filter = PlayerTest.Damage
 Test time =   0.01 sec
 ----------------------------------------------------------
 Test Passed.
-"PlayerTest.Damage" end time: Aug 17 22:30 EEST
+"PlayerTest.Damage" end time: Aug 18 12:36 EEST
 "PlayerTest.Damage" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -85,7 +85,7 @@ Test Passed.
 4/4 Test: PlayerTest.Heal
 Command: "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/labirinth_tests" "--gtest_filter=PlayerTest.Heal" "--gtest_also_run_disabled_tests"
 Directory: /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build
-"PlayerTest.Heal" start time: Aug 17 22:30 EEST
+"PlayerTest.Heal" start time: Aug 18 12:36 EEST
 Output:
 ----------------------------------------------------------
 Running main() from /Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth/build/_deps/googletest-src/googletest/src/gtest_main.cc
@@ -104,8 +104,8 @@ Note: Google Test filter = PlayerTest.Heal
 Test time =   0.01 sec
 ----------------------------------------------------------
 Test Passed.
-"PlayerTest.Heal" end time: Aug 17 22:30 EEST
+"PlayerTest.Heal" end time: Aug 18 12:36 EEST
 "PlayerTest.Heal" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-End testing: Aug 17 22:30 EEST
+End testing: Aug 18 12:36 EEST

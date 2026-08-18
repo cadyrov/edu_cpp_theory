@@ -1,6 +1,6 @@
 GameTest.Equal 2 0.00522194
-GameTest.GameName 8 0.00087137
-PlayerTest.Create 4 0.00182818
-PlayerTest.Damage 3 0.00228243
-PlayerTest.Heal 3 0.00236831
+GameTest.GameName 9 0.0014396
+PlayerTest.Create 5 0.00163283
+PlayerTest.Damage 4 0.00198243
+PlayerTest.Heal 4 0.00186995
 ---
