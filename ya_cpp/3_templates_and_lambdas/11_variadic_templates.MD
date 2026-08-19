@@ -142,16 +142,67 @@ int main() {
 
 ### Пример 3: идеальная передача пакета
 
+Универсальная обертка может принять любую вызываемую сущность и произвольное
+число аргументов, а затем передать их целевой функции:
+
 ```cpp
 #include <utility>
 
-template <typename T, typename... Args>
-T make(Args&&... args) {
-    return T(std::forward<Args>(args)...);
+template <typename F, typename... Args>
+decltype(auto) call(F&& function, Args&&... args) {
+    return std::forward<F>(function)(
+        std::forward<Args>(args)...
+    );
 }
+
+int sum(int a, int b) {
+    return a + b;
+}
+
+int result = call(sum, 2, 3); // 5
 ```
 
-Каждый аргумент передается дальше со своей категорией значения.
+`F&&` и `Args&&...` здесь являются forwarding references: они принимают как
+lvalue, так и rvalue. Внутри функции именованные параметры всегда являются
+lvalue, поэтому `std::forward` восстанавливает исходную категорию значения.
+Благодаря этому целевая функция получает ссылки и временные объекты именно в
+том виде, в котором их передал вызывающий код, без лишних копий.
+
+В `std::forward` нужно указывать соответствующий тип из пакета:
+`std::forward<Args>(args)...`, а не один общий тип для всех аргументов.
+
+Такие обертки используются для логирования, измерения времени, повторных
+вызовов, очередей задач и обработчиков событий.
+
+#### Логирующая обертка
+
+```cpp
+#include <functional>
+#include <iostream>
+#include <utility>
+
+template <typename F, typename... Args>
+decltype(auto) call_with_log(F&& function, Args&&... args) {
+    std::cout << "Вызов функции с " << sizeof...(Args) << " аргументами\n";
+
+    return std::invoke(
+        std::forward<F>(function),
+        std::forward<Args>(args)...
+    );
+}
+
+int multiply(int a, int b) {
+    return a * b;
+}
+
+int result = call_with_log(multiply, 4, 5);
+// Вызов функции с 2 аргументами
+// result == 20
+```
+
+`std::invoke` делает обертку универсальнее обычного `function(args...)`: через
+нее можно вызывать не только функции и лямбды, но и указатели на методы объекта.
+`decltype(auto)` сохраняет точный тип результата, включая ссылку или `void`.
 
 ### Пример 4: рекурсия по пакету значений
 
