@@ -39,6 +39,8 @@ class Item {
     int value_;
 };
 
+using Items = std::vector<Item>;
+
 class Inventory {
   public:
     std::optional<Item> Find(int id) const noexcept;
@@ -46,6 +48,6 @@ class Inventory {
     std::optional<Item> Pop(int id);
 
   private:
-    std::vector<Item> data_;
+    Items data_;
 };
 } // namespace game
