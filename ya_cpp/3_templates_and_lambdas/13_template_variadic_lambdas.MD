@@ -192,6 +192,7 @@ auto count = std::count_if(
 
 ```cpp
 #include <functional>
+#include <iostream>
 #include <utility>
 
 template <typename... Funcs>
@@ -200,6 +201,21 @@ auto make_call_each(Funcs&&... funcs) {
         (std::invoke(funcs, std::forward<decltype(args)>(args)...), ...);
     };
 }
+
+int sum = 0;
+
+auto print = [](int value) {
+    std::cout << "value: " << value << '\n';
+};
+
+auto add_to_sum = [&sum](int value) {
+    sum += value;
+};
+
+auto call_each = make_call_each(print, add_to_sum);
+call_each(5); // print(5), затем add_to_sum(5)
+
+std::cout << sum; // 5
 ```
 
 Такая лямбда хранит набор функций и вызывает каждую с переданным пакетом
@@ -209,6 +225,10 @@ move-only функциональные объекты.
 ### Пример 10: overloaded
 
 ```cpp
+#include <iostream>
+#include <string>
+#include <variant>
+
 template <typename... Ts>
 struct Overloaded : Ts... {
     using Ts::operator()...;
@@ -216,9 +236,20 @@ struct Overloaded : Ts... {
 
 template <typename... Ts>
 Overloaded(Ts...) -> Overloaded<Ts...>;
+
+std::variant<int, double, std::string> value = std::string{"hello"};
+
+auto visitor = Overloaded{
+    [](int x) { std::cout << "int: " << x << '\n'; },
+    [](double x) { std::cout << "double: " << x << '\n'; },
+    [](const std::string& x) { std::cout << "string: " << x << '\n'; }
+};
+
+std::visit(visitor, value); // string: hello
 ```
 
-Так можно объединять несколько лямбд в один объект.
+Так несколько лямбд объединяются в один visitor. `std::visit` выбирает
+перегрузку по типу значения, которое сейчас хранится в `variant`.
 
 ### Пример 11: `std::apply` и tuple
 
