@@ -254,6 +254,8 @@ std::visit(visitor, value); // string: hello
 ### Пример 11: `std::apply` и tuple
 
 ```cpp
+#include <iostream>
+#include <string>
 #include <tuple>
 #include <utility>
 
@@ -266,6 +268,17 @@ void visit_tuple(Visitor&& visitor, Tuple&& tuple) {
         std::forward<Tuple>(tuple)
     );
 }
+
+auto data = std::tuple{42, std::string{"hello"}, 3.5};
+
+visit_tuple(
+    [](const auto& value) {
+        std::cout << value << '\n';
+    },
+    data
+);
+
+// Напечатает: 42, hello и 3.5 — каждое значение с новой строки.
 ```
 
 `std::apply` раскрывает `tuple` в аргументы вызываемого объекта.
@@ -280,6 +293,8 @@ auto fib_impl = [](auto& self, int n) -> int {
 auto fib = [fib_impl](int n) {
     return fib_impl(fib_impl, n);
 };
+
+int result = fib(10); // 55
 ```
 
 В C++23 можно короче через явный параметр `this`.
@@ -288,6 +303,8 @@ auto fib = [fib_impl](int n) {
 auto fib = [](this auto& self, int n) -> int {
     return n <= 1 ? n : self(n - 1) + self(n - 2);
 };
+
+int result = fib(10); // 55
 ```
 
 ## Подводные камни
