@@ -2,7 +2,8 @@
 
 ## Суть
 
-SFINAE означает `Substitution Failure Is Not An Error`.
+SFINAE означает `Substitution Failure Is Not An Error` — «неудачная подстановка
+не является ошибкой».
 
 Если при подстановке шаблонных аргументов сигнатура становится некорректной, компилятор не выдает ошибку сразу, а просто убирает эту перегрузку из набора кандидатов.
 
@@ -17,6 +18,37 @@ auto size_of(const T& value) -> decltype(value.size()) {
 
 SFINAE работает в непосредственном контексте: в типах параметров, возвращаемом
 типе и шаблонных параметрах функции. Тело функции сюда не входит.
+
+- `decltype` определяет тип выражения, не вычисляя его.
+- `std::declval<T>()` позволяет получить выражение типа `T` без создания объекта;
+  используется только в невычисляемом контексте, например в `decltype`.
+- `std::void_t<T...>` превращается в `void`, если все переданные типы корректны;
+  используется для проверки существования типов и выражений.
+- `std::enable_if_t<Condition, T>` становится типом `T`, если условие истинно;
+  иначе тип не существует и шаблон исключается из набора кандидатов.
+
+```cpp
+int value = 42;
+decltype(value) copy = value; // тип copy — int
+
+struct User {
+    int get_id() const;
+};
+
+using Id = decltype(std::declval<const User&>().get_id()); // Id — int
+
+template <typename, typename = void>
+struct HasValueType : std::false_type {};
+
+template <typename T>
+struct HasValueType<T, std::void_t<typename T::value_type>>
+    : std::true_type {}; // true, если у T есть вложенный тип value_type
+
+template <typename T, std::enable_if_t<std::is_integral_v<T>, int> = 0>
+bool is_even(T value) {
+    return value % 2 == 0; // доступно только для целочисленных типов
+}
+```
 
 ## Примеры
 
@@ -85,6 +117,15 @@ auto size_of(const Container& value) {
     return value.size();
 }
 ```
+
+```cpp
+typename = decltype(std::declval<const Container&>().size())
+```
+
+Читается так: объявить безымянный шаблонный параметр типа, типом по умолчанию
+для которого будет тип результата вызова `size()` у константного `Container`.
+Если такой вызов некорректен, подстановка завершается неудачно и шаблон
+исключается из набора кандидатов.
 
 `std::declval<T>()` используют только в невычисляемом контексте, например внутри
 `decltype` или `sizeof`.
