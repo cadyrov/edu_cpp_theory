@@ -1,16 +1,18 @@
 // Напишите visit_tuple, который через std::apply вызывает visitor для каждого элемента tuple.
 #include <iostream>
+#include <string>
 #include <tuple>
-#include <variant>
+#include <utility>
+
+template <typename Visitor, typename Tuple> void visit_tuple(Visitor&& visitor, Tuple&& tuple) {
+    std::apply([&visitor](auto&&... args) { (visitor(std::forward<decltype(args)>(args)), ...); },
+               std::forward<Tuple>(tuple));
+}
 
 int main() {
-    std::variant<int, double, std::string> value = std::string{"hello"};
+    auto data = std::tuple{42, std::string{"hello"}, 3.5};
 
-    auto visitor = Overloaded{[](int x) { std::cout << "int: " << x << '\n'; },
-                              [](double x) { std::cout << "double: " << x << '\n'; },
-                              [](const std::string& x) { std::cout << "string: " << x << '\n'; }};
-
-    std::visit(visitor, value);
+    visit_tuple([](const auto& value) { std::cout << value << '\n'; }, data);
 }
 
 // clang++ --std=c++23 -o main
