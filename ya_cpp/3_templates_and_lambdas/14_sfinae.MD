@@ -146,6 +146,28 @@ struct HasSize<T, std::void_t<decltype(std::declval<const T&>().size())>>
 
 `std::void_t` помогает проверить, существует ли выражение.
 
+Построчно:
+
+```cpp
+// Первичный шаблон: HasSize<T, void>, по умолчанию false_type — «метода size нет».
+template <typename, typename = void> struct HasSize : std::false_type {};
+
+// Специализация: если выражение size() валидно, void_t<...> даёт void и
+// совпадает со вторым параметром первичного шаблона -> выбирается true_type.
+template <typename T>
+struct HasSize<T, std::void_t<decltype(std::declval<const T&>().size())>>
+    : std::true_type {};
+```
+
+Как это работает:
+
+- `std::declval<const T&>()` — воображаемая ссылка на `T`, без создания объекта.
+- `decltype(...)` — тип выражения «у константной ссылки на `T` есть метод `size()`».
+- если `size()` **не существует**, выражение невалидно → `void_t` не может вывести
+  тип → специализация отбрасывается (SFINAE), остаётся `false_type`;
+- если **существует**, `void_t<...>` даёт `void`, совпадает со вторым параметром
+  первичного шаблона → выбирается специализация `true_type`.
+
 Для удобства обычно добавляют переменную:
 
 ```cpp
