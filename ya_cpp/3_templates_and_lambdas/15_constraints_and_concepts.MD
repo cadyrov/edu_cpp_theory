@@ -39,6 +39,58 @@ inline constexpr bool has_size_v = requires(const T& value) {
 `typename T::value_type` проверяет наличие вложенного типа.
 Без `typename` это было бы проверкой выражения `T::value_type`.
 
+#### Разница между `typename T::value_type` и `T::value_type`
+
+`typename T::value_type` проверяет наличие вложенного **типа**:
+
+```cpp
+requires { typename T::value_type; };
+```
+
+- Компилятор проверяет: существует ли в `T` вложенный тип `value_type`.
+- Значение этого типа не нужно, важен сам факт существования.
+- Сработает для `std::vector<int>` (внутри есть `using value_type = int`).
+
+`T::value_type` (без `typename`) проверяет **выражение**:
+
+```cpp
+requires { T::value_type; };
+```
+
+- Компилятор проверяет: можно ли вычислить выражение `T::value_type`.
+- Это обращение к статическому члену-данным или `static constexpr`.
+- Сработает для типа со статическим членом:
+
+```cpp
+struct A {
+    static constexpr int value_type = 42;
+};
+// requires { A::value_type; } → true
+```
+
+| Синтаксис | Что проверяется | Что нужно в `T` |
+|---|---|---|
+| `typename T::value_type` | наличие типа | `using value_type = ...;` |
+| `T::value_type` | валидность выражения | `static ... value_type;` |
+
+`typename` в начале явно говорит: дальше идёт имя типа, значит требование —
+про типы. Без него `::` трактуется как доступ к члену-значению.
+
+```cpp
+struct WithType { using value_type = int; };
+struct WithValue { static constexpr int value_type = 42; };
+
+static_assert(requires { typename WithType::value_type; });  // true
+static_assert(requires { typename WithValue::value_type; }); // false — это НЕ тип
+
+static_assert(requires { WithValue::value_type; });          // true — это выражение
+static_assert(requires { WithType::value_type; });           // false — тип нельзя вычислить как значение
+```
+
+Для `std::vector<int>`:
+- `typename T::value_type` → `true` (тип `int` есть)
+- `T::value_type` → `false` (выражения нет, только тип)
+
 ### Пример 2: составные требования
 
 ```cpp
