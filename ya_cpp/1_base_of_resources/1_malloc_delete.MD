@@ -648,6 +648,58 @@ int main() {
 
 Если его нет, используется глобальный `::operator new`.
 
+## Счётчик живых объектов
+
+Частая задача: посчитать, сколько объектов класса сейчас существует.
+
+Инкремент — в `operator new`, декремент — в `operator delete`.
+
+```cpp
+#include <cstdlib>
+#include <iostream>
+#include <new>
+
+struct User {
+    static int alive;
+
+    static void* operator new(std::size_t size) {
+        ++alive;
+        if (void* p = std::malloc(size)) {
+            return p;
+        }
+        --alive;
+        throw std::bad_alloc();
+    }
+
+    static void operator delete(void* p) noexcept {
+        --alive;
+        std::free(p);
+    }
+};
+
+int User::alive = 0;
+
+int main() {
+    std::cout << User::alive << '\n'; // 0
+
+    User* a = new User();
+    User* b = new User();
+    std::cout << User::alive << '\n'; // 2
+
+    delete a;
+    std::cout << User::alive << '\n'; // 1
+
+    delete b;
+    std::cout << User::alive << '\n'; // 0
+}
+```
+
+Важные детали:
+
+- если `operator new` не смог выделить память, инкремент нужно откатить, иначе счётчик соврёт;
+- если конструктор бросит исключение, C++ вызовет `operator delete`, и декремент произойдёт автоматически;
+- `alive` хранит текущее количество живых объектов, а не общее число созданных за всё время.
+
 ## Если конструктор бросил исключение
 
 Если `operator new` выделил память, но конструктор бросил исключение, C++ сам вызовет подходящий `operator delete`.
