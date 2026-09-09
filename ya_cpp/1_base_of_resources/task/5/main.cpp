@@ -19,7 +19,7 @@ int main() {
         throw std::bad_alloc();
     }
 
-    User* p = new (mem) User();
+    User* p = new (mem) User(33);
 
     std::cout << *p << "\n";
 
