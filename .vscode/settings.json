@@ -8,5 +8,6 @@
     "[c]": {
         "editor.defaultFormatter": "ms-vscode.cpptools",
         "editor.formatOnSave": true
-    }
+    },
+    "cmake.sourceDirectory": "/Users/kot/Documents/repos/edu_cpp_theory/projects/1/labirinth"
 }
