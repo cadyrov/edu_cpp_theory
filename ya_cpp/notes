@@ -12,13 +12,14 @@ ya_cpp/4_stdlib/PLAN.MD
 все кратко
 
 
-ya_cpp/2_shared_ownership/1_shared_ptr_weak_ptr.MD
-формат 
-ты вопрос с примером кода
-я ответ
-если неправильно - разбор
+все последующие задачи этой темы надо переделать исходя из предпосылок
+- полное раскрытие темы
+- полные реализации
+- усложнение 
+- исправление ошибок
+но оставить также не более 10 задач
 
-ya_cpp/4_stdlib
+
 
 find /Users/kot/Documents/repos/edu_cpp_theory/ya_cpp/1_base_of_resources -maxdepth 1 -iname "*.md" | sort -V| xargs pandoc --pdf-engine=xelatex -V mainfont="Arial" -V monofont="Menlo" -o /Users/kot/Documents/1_base_of_resources.pdf
 find /Users/kot/Documents/repos/edu_cpp_theory/ya_cpp/2_shared_ownership  -maxdepth 1 -iname "*.md" | sort -V | xargs pandoc --pdf-engine=xelatex -V mainfont="Arial" -V monofont="Menlo" -o /Users/kot/Documents/2_shared_ownership.pdf
